@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Maps Scraper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background: #f0f2f5; }
+        h1   { font-family: 'Space Mono', monospace; }
+
+        #loading { display: none; }
+        #loading.active { display: flex; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            width: 20px; height: 20px;
+            border: 3px solid #d1d5db;
+            border-top-color: #111;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .result-card { animation: fadeUp 0.3s ease both; }
+        .result-card:nth-child(2)   { animation-delay: .04s; }
+        .result-card:nth-child(3)   { animation-delay: .08s; }
+        .result-card:nth-child(4)   { animation-delay: .12s; }
+        .result-card:nth-child(5)   { animation-delay: .16s; }
+        .result-card:nth-child(n+6) { animation-delay: .20s; }
+    </style>
+</head>
+
+<body class="min-h-screen p-6 md:p-12">
+<div class="max-w-4xl mx-auto">
+
+    <!-- Header -->
+    <div class="mb-10">
+        <h1 class="text-4xl font-bold tracking-tight mb-1">📍 Maps Scraper</h1>
+        <p class="text-gray-500 text-sm">Search Google Maps and export results to Excel</p>
+    </div>
+
+    <!-- Search -->
+    <form action="/scrape" method="POST" class="flex gap-3 mb-5" onsubmit="showLoading()">
+        <input
+            type="text"
+            name="query"
+            placeholder="e.g. shops in Airoli"
+            class="border border-gray-300 bg-white p-4 rounded-xl w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-black text-base"
+            required
+            autocomplete="off"
+        />
+        <button
+            type="submit"
+            class="bg-black text-white px-7 rounded-xl font-semibold text-sm hover:bg-gray-800 active:scale-95 transition-all shadow-sm whitespace-nowrap"
+        >
+            Scrape
+        </button>
+    </form>
+
+    <!-- Loading indicator -->
+    <div id="loading" class="items-center gap-3 text-gray-500 text-sm mb-5">
+        <div class="spinner"></div>
+        <span>Scraping Google Maps in the background — usually takes 30–60 seconds…</span>
+    </div>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 mb-6 text-sm font-medium">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Toolbar -->
+    <div class="flex items-center justify-between mb-6">
+        <span class="text-sm text-gray-500 font-medium">
+            {% if data %}
+                {{ data|length }} result{% if data|length != 1 %}s{% endif %} found
+            {% endif %}
+        </span>
+        <a
+            href="/export"
+            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
+        >
+            ⬇ Export Excel
+        </a>
+    </div>
+
+    <!-- Results -->
+    <div class="grid gap-4">
+        {% for item in data %}
+        <div class="result-card bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+            <div class="flex items-start justify-between gap-4 mb-3">
+                <div>
+                    <h2 class="text-xl font-semibold leading-snug">{{ item.Name or "—" }}</h2>
+                    {% if item.Category %}
+                    <span class="text-xs text-gray-400 uppercase tracking-wide mt-0.5 block">
+                        {{ item.Category }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% if item.Rating %}
+                <div class="shrink-0 text-right">
+                    <span class="bg-amber-50 text-amber-700 border border-amber-200 text-sm font-bold px-3 py-1 rounded-full">
+                        ⭐ {{ item.Rating }}
+                    </span>
+                    {% if item.Reviews %}
+                    <p class="text-xs text-gray-400 mt-1">{{ item.Reviews }} reviews</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="space-y-1.5 text-sm text-gray-600">
+                {% if item.Address %}
+                <p class="flex items-start gap-2">
+                    <span class="shrink-0 mt-0.5">📍</span><span>{{ item.Address }}</span>
+                </p>
+                {% endif %}
+                {% if item.Phone %}
+                <p class="flex items-center gap-2">
+                    <span class="shrink-0">📞</span><span>{{ item.Phone }}</span>
+                </p>
+                {% endif %}
+                {% if item.Website %}
+                <p class="flex items-center gap-2">
+                    <span class="shrink-0">🌐</span>
+                    <a href="{{ item.Website }}" target="_blank" rel="noopener noreferrer"
+                       class="text-blue-600 underline underline-offset-2 hover:text-blue-800 truncate max-w-xs">
+                        {{ item.Website }}
+                    </a>
+                </p>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty state -->
+    {% if not data and not error %}
+    <div class="text-center py-20 text-gray-400">
+        <p class="text-5xl mb-4">🗺️</p>
+        <p class="text-base font-medium">No results yet.</p>
+        <p class="text-sm mt-1">Enter a query above and press <strong>Scrape</strong>.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function showLoading() {
+        document.getElementById('loading').classList.add('active');
+    }
+</script>
+</body>
+</html>
