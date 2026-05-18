@@ -162,6 +162,9 @@ def scrape_google_maps(query):
 
             for i, card in enumerate(cards):
                 try:
+                    if len(results) >= 100:
+                        print("[scraper] Reached 100 lead limit.")
+                        break
                     name = _name(card)
                     if not name:
                         continue
@@ -170,10 +173,13 @@ def scrape_google_maps(query):
                         "Category": _category(card),
                         "Rating":   _rating(card),
                         "Reviews":  _reviews(card),
+                        "Latest Review": _latest_review(card),
+                        "Email":    _email(card),
                         "Address":  _address(card),
                         "Phone":    _phone(card),
                         "Website":  _website(card),
                     }
+
                     results.append(row)
                     print(f"[scraper] [{i+1}] {name} | {row['Rating']} | {row['Address']}")
                 except Exception as e:
@@ -191,6 +197,9 @@ def scrape_google_maps(query):
             time.sleep(2)
             browser.close()
 
+    # Sort by rating highest first
+    results.sort(key=lambda x: float(x["Rating"]) if x.get("Rating") else 0, reverse=True)
+
     print(f"[scraper] Done. Total: {len(results)}")
     return results
 
@@ -204,6 +213,10 @@ def _scroll_results(page):
     prev = 0
     stale = 0
     for i in range(15):
+        cards = page.query_selector_all('div[role="article"]')
+        if len(cards) >= 100:
+            print("[scraper] Reached 100 card load limit during scroll.")
+            break
         feed.evaluate("el => el.scrollBy(0, 2500)")
         time.sleep(1.5)
         if page.query_selector('span.HlvSq'):
@@ -265,38 +278,169 @@ def _category(card):
     return _safe(card, [".DkEaL", "span.emkBOd"])
 
 
-def _address(card):
+def _debug_card(card, name):
+    """Print all raw row text to understand the structure."""
     try:
-        for row in card.query_selector_all(".W4Efsd"):
-            t = row.inner_text().strip()
-            if t and re.search(r'\d', t):
-                t = re.sub(r'^(Open|Closed|Opens|Closes)[^·]*·\s*', '', t)
-                return t.strip()
+        rows = card.query_selector_all(".W4Efsd")
+        print(f"\n[DEBUG] Card: {name}")
+        for i, row in enumerate(rows):
+            print(f"  W4Efsd[{i}]: {repr(row.inner_text().strip())}")
+        chips = card.query_selector_all(".Io6YTe")
+        for i, chip in enumerate(chips):
+            print(f"  Io6YTe[{i}]: {repr(chip.inner_text().strip())}")
+    except Exception as e:
+        print(f"  [DEBUG ERROR] {e}")
+
+
+def _parse_card_fields(card):
+    address = ""
+    phone   = ""
+
+    phone_re  = re.compile(r'^(?:\+?\d[\d\s\-\(\)\.]{6,}\d)$')
+    rating_re = re.compile(r'^\d+(?:\.\d+)?\(\d{1,3}(?:,\d{3})*\)$')
+    price_re  = re.compile(r'[₹$€£]|^\d{2,4}\s*[-–]\s*\d{2,4}$')
+    status_re = re.compile(r'^(Open|Closed|Opens|Closes)', re.I)
+
+    try:
+        rows = card.query_selector_all(".W4Efsd")
+        for row in rows:
+            raw = row.inner_text().strip()
+            if not raw:
+                continue
+            segments = [s.strip() for s in raw.split('·') if s.strip()]
+
+            for seg in segments:
+                if len(seg) <= 2:
+                    continue
+                if status_re.match(seg):
+                    continue
+                if price_re.search(seg):
+                    continue
+                if rating_re.match(seg):
+                    continue
+
+                if phone_re.match(seg):
+                    digits = re.findall(r'\d', seg)
+                    if len(digits) >= 7 and not phone:
+                        phone = seg
+                        continue
+
+                if not address and re.search(r'[A-Za-z]', seg) and len(seg) > 5:
+                    address = seg
+
     except Exception:
         pass
-    return _safe(card, [".Io6YTe"])
+
+    return address, phone
+
+
+def _address(card):
+    addr, _ = _parse_card_fields(card)
+    return addr
 
 
 def _phone(card):
+    _, ph = _parse_card_fields(card)
+    return ph
+
+
+def _latest_review(card):
     try:
-        for row in card.query_selector_all(".W4Efsd"):
-            t = row.inner_text().strip()
-            if re.search(r'[\+\d][\d\s\-\(\)]{7,}', t):
-                return t.strip()
+        text = card.inner_text() or ""
+        patterns = [
+            re.compile(r'\b\d+\s+(?:minute|hour|day|week|month|year)s?\s+ago\b', re.I),
+            re.compile(r'\b(?:today|yesterday)\b', re.I),
+            re.compile(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{1,2}(?:,\s*\d{4})?\b', re.I),
+            re.compile(r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b'),
+            re.compile(r'\b\d{4}-\d{2}-\d{2}\b'),
+        ]
+        for pattern in patterns:
+            match = pattern.search(text)
+            if match:
+                return match.group(0).strip()
     except Exception:
         pass
     return ""
 
 
+def _email(card):
+    try:
+        email_re = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
+
+        for a in card.query_selector_all('a[href^="mailto:"]'):
+            href = a.get_attribute("href") or ""
+            email = href.split("mailto:")[-1].split("?")[0].strip()
+            if email:
+                return email
+
+        for a in card.query_selector_all('a'):
+            href = a.get_attribute("href") or ""
+            match = email_re.search(href)
+            if match:
+                return match.group(0).strip()
+
+        raw = card.inner_text() if hasattr(card, 'inner_text') else ""
+        match = email_re.search(raw or "")
+        if match:
+            return match.group(0).strip()
+
+        try:
+            raw = card.content() if hasattr(card, 'content') else ""
+            match = email_re.search(raw or "")
+            if match:
+                return match.group(0).strip()
+        except Exception:
+            pass
+    except Exception:
+        pass
+    return ""
+
+
+def _detail_scope(page):
+    try:
+        selectors = [
+            '#pane',
+            '[id^="pane"]',
+            'div[role="main"]',
+            'div.section-layout',
+        ]
+        for sel in selectors:
+            try:
+                scope = page.query_selector(sel)
+                if scope:
+                    return scope
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return page
+
 def _website(card):
     try:
         el = card.query_selector('a[data-item-id*="authority"]')
         if el:
-            return el.get_attribute("href") or ""
+            href = el.get_attribute("href") or ""
+            if href:
+                return href
+
         for a in card.query_selector_all('a[href^="http"]'):
             href = a.get_attribute("href") or ""
-            if "google.com" not in href and "maps" not in href:
-                return href
+            if not href:
+                continue
+            lower = href.lower()
+            if 'mailto:' in lower:
+                continue
+            if any(block in lower for block in ["maps.google.com", "google.com/maps", "g.page", "plus.codes", "googleusercontent.com"]):
+                continue
+            return href
+
+        raw = card.inner_text() if hasattr(card, 'inner_text') else ""
+        if raw and 'http' in raw:
+            for match in re.findall(r'https?://[^\s,\)\]\>]+', raw):
+                lower = match.lower()
+                if any(block in lower for block in ["maps.google.com", "google.com/maps", "g.page", "plus.codes", "googleusercontent.com"]):
+                    continue
+                return match
     except Exception:
         pass
     return ""

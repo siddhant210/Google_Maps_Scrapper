@@ -3,163 +3,374 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Google Maps Scraper</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Maps Scraper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
-        body { font-family: 'DM Sans', sans-serif; background: #f0f2f5; }
-        h1   { font-family: 'Space Mono', monospace; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0c0c0f; --surface: #16161a; --surface2: #1e1e24;
+            --border: #2a2a32; --accent: #00e5a0; --accent2: #00b87a;
+            --text: #f0f0f5; --muted: #6b6b7e; --gold: #fbbf24;
+            --wa: #25d366; --wa2: #1da851;
+        }
+        body { font-family: 'Instrument Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+        body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,229,160,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,160,.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+        .wrap { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
 
-        #loading { display: none; }
+        /* Header */
+        .header { margin-bottom: 3rem; animation: fadeDown .5s ease both; }
+        .header-tag { display: inline-flex; align-items: center; gap: .5rem; background: rgba(0,229,160,.08); border: 1px solid rgba(0,229,160,.2); color: var(--accent); font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; padding: .35rem .85rem; border-radius: 100px; margin-bottom: 1rem; }
+        h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+        h1 span { color: var(--accent); }
+        .subtitle { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
+
+        /* Search */
+        .search-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; display: flex; gap: .75rem; margin-bottom: 1.5rem; animation: fadeUp .5s .1s ease both; transition: border-color .2s; }
+        .search-card:focus-within { border-color: rgba(0,229,160,.4); box-shadow: 0 0 0 3px rgba(0,229,160,.06); }
+        .search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Instrument Sans', sans-serif; font-size: 1rem; padding: .25rem .5rem; }
+        .search-input::placeholder { color: var(--muted); }
+        .btn-scrape { background: var(--accent); color: #000; border: none; border-radius: 10px; padding: .75rem 1.75rem; font-family: 'Instrument Sans', sans-serif; font-size: .9rem; font-weight: 700; cursor: pointer; transition: background .15s, transform .1s; white-space: nowrap; }
+        .btn-scrape:hover { background: var(--accent2); }
+        .btn-scrape:active { transform: scale(.97); }
+
+        /* Loading */
+        #loading { display: none; align-items: center; gap: .75rem; background: rgba(0,229,160,.06); border: 1px solid rgba(0,229,160,.15); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: .88rem; color: var(--accent); }
         #loading.active { display: flex; }
+        .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(0,229,160,.2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .spinner {
-            width: 20px; height: 20px;
-            border: 3px solid #d1d5db;
-            border-top-color: #111;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-            flex-shrink: 0;
-        }
+        /* Toolbar */
+        .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; animation: fadeUp .4s .15s ease both; }
+        .result-count { font-size: .85rem; color: var(--muted); }
+        .result-count strong { color: var(--accent); font-size: 1rem; }
+        .toolbar-right { display: flex; gap: .6rem; align-items: center; }
+        .btn { display: inline-flex; align-items: center; gap: .45rem; border-radius: 10px; padding: .6rem 1.1rem; font-family: 'Instrument Sans', sans-serif; font-size: .82rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .15s; white-space: nowrap; border: 1px solid transparent; }
+        .btn:active { transform: scale(.97); }
+        .btn-excel { background: transparent; border-color: var(--accent); color: var(--accent); }
+        .btn-excel:hover { background: var(--accent); color: #000; }
+        .btn-wa { background: var(--wa); color: #fff; border-color: var(--wa); }
+        .btn-wa:hover { background: var(--wa2); border-color: var(--wa2); }
+        .btn-wa:disabled { background: #1a3a26; color: #2d6644; border-color: #1a3a26; cursor: not-allowed; }
 
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .result-card { animation: fadeUp 0.3s ease both; }
-        .result-card:nth-child(2)   { animation-delay: .04s; }
-        .result-card:nth-child(3)   { animation-delay: .08s; }
-        .result-card:nth-child(4)   { animation-delay: .12s; }
-        .result-card:nth-child(5)   { animation-delay: .16s; }
-        .result-card:nth-child(n+6) { animation-delay: .20s; }
+        /* Error */
+        .error-box { background: rgba(255,77,109,.07); border: 1px solid rgba(255,77,109,.25); color: #ff8099; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: .88rem; }
+
+        /* Cards */
+        .cards { display: grid; gap: .75rem; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; display: grid; grid-template-columns: 1fr auto; gap: .75rem 1rem; transition: border-color .2s, transform .15s; animation: fadeUp .35s ease both; }
+        .card:hover { border-color: rgba(0,229,160,.25); transform: translateY(-1px); }
+        .card:nth-child(1)  { animation-delay: .00s; }
+        .card:nth-child(2)  { animation-delay: .03s; }
+        .card:nth-child(3)  { animation-delay: .06s; }
+        .card:nth-child(4)  { animation-delay: .09s; }
+        .card:nth-child(5)  { animation-delay: .12s; }
+        .card:nth-child(n+6){ animation-delay: .15s; }
+        .card-left { min-width: 0; }
+        .card-name { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: .2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-category { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: .65rem; }
+        .card-meta { display: flex; flex-direction: column; gap: .3rem; }
+        .meta-row { display: flex; align-items: flex-start; gap: .5rem; font-size: .83rem; color: #a0a0b0; line-height: 1.4; }
+        .meta-icon { flex-shrink: 0; font-size: .9rem; margin-top: .05rem; }
+        .meta-row a { color: var(--accent); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
+        .meta-row a:hover { text-decoration: underline; }
+        .rating-block { display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; flex-shrink: 0; }
+        .rating-badge { display: flex; align-items: center; gap: .3rem; background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.2); color: var(--gold); font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; padding: .35rem .75rem; border-radius: 8px; }
+        .rating-reviews { font-size: .72rem; color: var(--muted); text-align: right; }
+        .empty { text-align: center; padding: 5rem 0; animation: fadeUp .4s ease both; }
+        .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+        .empty h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; color: var(--muted); margin-bottom: .4rem; }
+        .empty p { font-size: .88rem; color: #4a4a5a; }
+
+        /* ── WhatsApp Modal ── */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 200; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(4px); }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto; animation: fadeUp .25s ease both; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: .6rem; }
+        .modal-close { background: none; border: none; color: var(--muted); font-size: 1.6rem; cursor: pointer; line-height: 1; transition: color .15s; }
+        .modal-close:hover { color: var(--text); }
+        .modal-info { background: rgba(0,229,160,.05); border: 1px solid rgba(0,229,160,.15); border-radius: 10px; padding: .85rem 1rem; font-size: .82rem; color: #7ecfb0; margin-bottom: 1.25rem; line-height: 1.6; }
+        .modal-field { margin-bottom: 1.1rem; }
+        .modal-label { display: block; margin-bottom: .45rem; font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+        .modal-textarea { width: 100%; min-height: 100px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: .85rem 1rem; color: var(--text); font-family: 'Instrument Sans', sans-serif; font-size: .9rem; resize: vertical; outline: none; transition: border-color .2s; }
+        .modal-textarea:focus { border-color: rgba(0,229,160,.4); }
+        .modal-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: .75rem 1rem; color: var(--text); font-family: 'Instrument Sans', sans-serif; font-size: .9rem; outline: none; transition: border-color .2s; }
+        .modal-input:focus { border-color: rgba(0,229,160,.4); }
+        .modal-hint { margin-top: .35rem; font-size: .74rem; color: var(--muted); }
+
+        /* divider */
+        .modal-divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+
+        /* test section */
+        .test-section { background: rgba(251,191,36,.04); border: 1px solid rgba(251,191,36,.15); border-radius: 12px; padding: 1rem; margin-bottom: 1.1rem; }
+        .test-label { font-size: .78rem; font-weight: 600; color: #fbbf24; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .6rem; display: flex; align-items: center; gap: .4rem; }
+        .test-row { display: flex; gap: .6rem; }
+        .test-row .modal-input { flex: 1; }
+        .btn-test { background: rgba(251,191,36,.15); color: #fbbf24; border: 1px solid rgba(251,191,36,.3); border-radius: 10px; padding: .75rem 1rem; font-family: 'Instrument Sans', sans-serif; font-size: .82rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .15s; }
+        .btn-test:hover { background: rgba(251,191,36,.25); }
+        .btn-test:active { transform: scale(.97); }
+
+        .modal-actions { display: flex; gap: .6rem; }
+        .modal-btn { flex: 1; border: none; border-radius: 10px; padding: .8rem; font-family: 'Instrument Sans', sans-serif; font-size: .88rem; font-weight: 700; cursor: pointer; transition: all .15s; }
+        .modal-btn:active { transform: scale(.97); }
+        .modal-btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+        .modal-btn-save { background: var(--surface2); color: var(--accent); border: 1px solid rgba(0,229,160,.3); }
+        .modal-btn-save:hover { background: rgba(0,229,160,.1); }
+        .modal-btn-send { background: var(--wa); color: #fff; }
+        .modal-btn-send:hover:not(:disabled) { background: var(--wa2); }
+
+        .progress-wrap { margin-top: .85rem; background: var(--surface2); border-radius: 100px; height: 6px; overflow: hidden; display: none; }
+        .progress-bar { height: 100%; background: var(--wa); border-radius: 100px; width: 0%; transition: width .4s ease; }
+
+        .modal-status { display: none; margin-top: .85rem; padding: .85rem 1rem; border-radius: 10px; font-size: .84rem; line-height: 1.6; white-space: pre-line; }
+        .modal-status.info    { background: rgba(251,191,36,.07); color: #fbbf24; border: 1px solid rgba(251,191,36,.2); }
+        .modal-status.success { background: rgba(37,211,102,.07); color: #25d366; border: 1px solid rgba(37,211,102,.2); }
+        .modal-status.error   { background: rgba(255,77,109,.07); color: #ff8099; border: 1px solid rgba(255,77,109,.2); }
+
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes fadeUp  { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeDown{ from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
+<body>
+<div class="wrap">
 
-<body class="min-h-screen p-6 md:p-12">
-<div class="max-w-4xl mx-auto">
-
-    <!-- Header -->
-    <div class="mb-10">
-        <h1 class="text-4xl font-bold tracking-tight mb-1">📍 Maps Scraper</h1>
-        <p class="text-gray-500 text-sm">Search Google Maps and export results to Excel</p>
+    <div class="header">
+        <div class="header-tag">📍 Lead Generator</div>
+        <h1>Maps <span>Scraper</span></h1>
+        <p class="subtitle">Extract business data from Google Maps and export to Excel instantly.</p>
     </div>
 
-    <!-- Search -->
-    <form action="/scrape" method="POST" class="flex gap-3 mb-5" onsubmit="showLoading()">
-        <input
-            type="text"
-            name="query"
-            placeholder="e.g. shops in Airoli"
-            class="border border-gray-300 bg-white p-4 rounded-xl w-full shadow-sm focus:outline-none focus:ring-2 focus:ring-black text-base"
-            required
-            autocomplete="off"
-        />
-        <button
-            type="submit"
-            class="bg-black text-white px-7 rounded-xl font-semibold text-sm hover:bg-gray-800 active:scale-95 transition-all shadow-sm whitespace-nowrap"
-        >
-            Scrape
-        </button>
+    <form action="/scrape" method="POST" onsubmit="showLoading()">
+        <div class="search-card">
+            <input class="search-input" type="text" name="query"
+                placeholder="e.g. restaurants in Bandra, shops in Airoli…" required autocomplete="off" />
+            <button type="submit" class="btn-scrape">⚡ Scrape</button>
+        </div>
     </form>
 
-    <!-- Loading indicator -->
-    <div id="loading" class="items-center gap-3 text-gray-500 text-sm mb-5">
+    <div id="loading">
         <div class="spinner"></div>
-        <span>Scraping Google Maps in the background — usually takes 30–60 seconds…</span>
+        <span>Scraping Google Maps — usually 30–60 seconds…</span>
     </div>
 
-    <!-- Error -->
     {% if error %}
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 mb-6 text-sm font-medium">
-        ⚠️ {{ error }}
-    </div>
+    <div class="error-box">⚠ {{ error }}</div>
     {% endif %}
 
-    <!-- Toolbar -->
-    <div class="flex items-center justify-between mb-6">
-        <span class="text-sm text-gray-500 font-medium">
-            {% if data %}
-                {{ data|length }} result{% if data|length != 1 %}s{% endif %} found
-            {% endif %}
-        </span>
-        <a
-            href="/export"
-            class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
-        >
-            ⬇ Export Excel
-        </a>
+    <div class="toolbar">
+        <div class="result-count">
+            {% if data %}<strong>{{ data|length }}</strong> businesses found{% endif %}
+        </div>
+        <div class="toolbar-right">
+            <button class="btn btn-wa" id="wa-open-btn" onclick="openWaModal()"
+                {% if not data %}disabled title="Scrape some leads first"{% endif %}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                WhatsApp
+            </button>
+            <a href="/export" class="btn btn-excel">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Excel
+            </a>
+        </div>
     </div>
 
-    <!-- Results -->
-    <div class="grid gap-4">
+    <div class="cards">
         {% for item in data %}
-        <div class="result-card bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-
-            <div class="flex items-start justify-between gap-4 mb-3">
-                <div>
-                    <h2 class="text-xl font-semibold leading-snug">{{ item.Name or "—" }}</h2>
-                    {% if item.Category %}
-                    <span class="text-xs text-gray-400 uppercase tracking-wide mt-0.5 block">
-                        {{ item.Category }}
-                    </span>
-                    {% endif %}
+        <div class="card">
+            <div class="card-left">
+                <div class="card-name">{{ item.Name or "—" }}</div>
+                {% if item.Category %}<div class="card-category">{{ item.Category }}</div>{% endif %}
+                <div class="card-meta">
+                    {% if item.Address %}<div class="meta-row"><span class="meta-icon">📍</span><span>{{ item.Address }}</span></div>{% endif %}
+                    {% if item.Phone %}<div class="meta-row"><span class="meta-icon">📞</span><span>{{ item.Phone }}</span></div>{% endif %}
+                    {% if item.Email %}<div class="meta-row"><span class="meta-icon">✉️</span><span>{{ item.Email }}</span></div>{% endif %}
+                    {% if item['Latest Review'] %}<div class="meta-row"><span class="meta-icon">🕒</span><span>{{ item['Latest Review'] }}</span></div>{% endif %}
+                    {% if item.Website %}<div class="meta-row"><span class="meta-icon">🌐</span><a href="{{ item.Website }}" target="_blank" rel="noopener">{{ item.Website }}</a></div>{% endif %}
                 </div>
-                {% if item.Rating %}
-                <div class="shrink-0 text-right">
-                    <span class="bg-amber-50 text-amber-700 border border-amber-200 text-sm font-bold px-3 py-1 rounded-full">
-                        ⭐ {{ item.Rating }}
-                    </span>
-                    {% if item.Reviews %}
-                    <p class="text-xs text-gray-400 mt-1">{{ item.Reviews }} reviews</p>
-                    {% endif %}
-                </div>
-                {% endif %}
             </div>
-
-            <div class="space-y-1.5 text-sm text-gray-600">
-                {% if item.Address %}
-                <p class="flex items-start gap-2">
-                    <span class="shrink-0 mt-0.5">📍</span><span>{{ item.Address }}</span>
-                </p>
-                {% endif %}
-                {% if item.Phone %}
-                <p class="flex items-center gap-2">
-                    <span class="shrink-0">📞</span><span>{{ item.Phone }}</span>
-                </p>
-                {% endif %}
-                {% if item.Website %}
-                <p class="flex items-center gap-2">
-                    <span class="shrink-0">🌐</span>
-                    <a href="{{ item.Website }}" target="_blank" rel="noopener noreferrer"
-                       class="text-blue-600 underline underline-offset-2 hover:text-blue-800 truncate max-w-xs">
-                        {{ item.Website }}
-                    </a>
-                </p>
-                {% endif %}
+            {% if item.Rating %}
+            <div class="rating-block">
+                <div class="rating-badge">⭐ {{ item.Rating }}</div>
+                {% if item.Reviews %}<div class="rating-reviews">{{ item.Reviews }} reviews</div>{% endif %}
             </div>
-
+            {% endif %}
         </div>
         {% endfor %}
     </div>
 
-    <!-- Empty state -->
     {% if not data and not error %}
-    <div class="text-center py-20 text-gray-400">
-        <p class="text-5xl mb-4">🗺️</p>
-        <p class="text-base font-medium">No results yet.</p>
-        <p class="text-sm mt-1">Enter a query above and press <strong>Scrape</strong>.</p>
+    <div class="empty">
+        <span class="empty-icon">🗺️</span>
+        <h2>No results yet</h2>
+        <p>Enter a search query above and hit <strong>Scrape</strong> to get started.</p>
     </div>
     {% endif %}
 
 </div>
 
+<!-- ── WhatsApp Modal ── -->
+<div class="modal-overlay" id="wa-overlay" onclick="overlayClick(event)">
+  <div class="modal">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        WhatsApp Campaign
+      </div>
+      <button class="modal-close" onclick="closeWaModal()">×</button>
+    </div>
+
+    <div class="modal-info">
+      💡 <strong>First time?</strong> A browser will open WhatsApp Web — scan the QR once with your phone. Session is saved — never need to scan again.
+    </div>
+
+    <!-- Template -->
+    <div class="modal-field">
+      <label class="modal-label">Message Template</label>
+      <textarea class="modal-textarea" id="wa-template" placeholder="Hi {name}..."></textarea>
+      <div class="modal-hint">Variables: <code style="color:var(--accent)">{name}</code> &nbsp;<code style="color:var(--accent)">{address}</code> &nbsp;<code style="color:var(--accent)">{rating}</code></div>
+    </div>
+
+    <!-- Delay -->
+    <div class="modal-field">
+      <label class="modal-label">Delay between messages (seconds)</label>
+      <input class="modal-input" type="number" id="wa-delay" value="5" min="3" max="60" />
+      <div class="modal-hint">Minimum 3s to avoid WhatsApp rate limits</div>
+    </div>
+
+    <!-- Lead count -->
+    <div class="modal-field">
+      <label class="modal-label">Leads ready to message</label>
+      <input class="modal-input" type="text" id="wa-lead-count" readonly style="opacity:.65;cursor:default;" />
+    </div>
+
+    <div class="modal-divider"></div>
+
+    <!-- Test number -->
+    <div class="test-section">
+      <div class="test-label">🧪 Test Mode — send to your number first</div>
+      <div class="test-row">
+        <input class="modal-input" type="text" id="wa-test-number"
+            placeholder="e.g. 8291061982 or +918291061982"
+            value="8291061982" />
+        <button class="btn-test" onclick="sendTest()">▶ Send Test</button>
+      </div>
+      <div class="modal-hint" style="margin-top:.5rem;">Enter your mobile number to test before bulk sending</div>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-save" onclick="saveWaTemplate()">💾 Save Template</button>
+      <button class="modal-btn modal-btn-send" id="wa-send-btn" onclick="sendAll()">📤 Send to All Leads</button>
+    </div>
+
+    <div class="progress-wrap" id="wa-progress-wrap">
+      <div class="progress-bar" id="wa-progress-bar"></div>
+    </div>
+
+    <div class="modal-status" id="wa-status"></div>
+
+  </div>
+</div>
+
 <script>
-    function showLoading() {
-        document.getElementById('loading').classList.add('active');
-    }
+function showLoading() { document.getElementById('loading').classList.add('active'); }
+
+function openWaModal() {
+    document.getElementById('wa-overlay').classList.add('open');
+    loadTemplate(); updateLeadCount();
+}
+function closeWaModal() {
+    document.getElementById('wa-overlay').classList.remove('open');
+    resetStatus();
+}
+function overlayClick(e) {
+    if (e.target === document.getElementById('wa-overlay')) closeWaModal();
+}
+
+function loadTemplate() {
+    fetch('/whatsapp-template').then(r => r.json())
+        .then(d => { document.getElementById('wa-template').value = d.template || ''; })
+        .catch(() => {});
+}
+
+function updateLeadCount() {
+    fetch('/whatsapp-lead-count').then(r => r.json())
+        .then(d => {
+            document.getElementById('wa-lead-count').value =
+                `${d.with_phone} of ${d.total} leads have a valid phone number`;
+        }).catch(() => {});
+}
+
+function saveWaTemplate() {
+    const t = document.getElementById('wa-template').value.trim();
+    if (!t) { showStatus('Template cannot be empty', 'error'); return; }
+    fetch('/whatsapp-template', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({template: t})
+    }).then(r => r.json())
+      .then(d => showStatus(d.success ? '✓ Template saved!' : '✗ ' + d.error, d.success ? 'success' : 'error'))
+      .catch(e => showStatus('✗ ' + e.message, 'error'));
+}
+
+function sendTest() {
+    const num = document.getElementById('wa-test-number').value.trim();
+    if (!num) { showStatus('Enter a test number first', 'error'); return; }
+    showStatus(`Sending test message to ${num}...\n(WhatsApp Web browser will open)`, 'info');
+    _doSend(num);
+}
+
+function sendAll() {
+    const btn = document.getElementById('wa-send-btn');
+    btn.disabled = true; btn.textContent = '⏳ Sending…';
+    showStatus('Starting campaign — WhatsApp Web will open. Keep the browser open until done.', 'info');
+    showProgress(10);
+    _doSend(null, () => { btn.disabled = false; btn.textContent = '📤 Send to All Leads'; });
+}
+
+function _doSend(testNumber, onDone) {
+    const delay = parseInt(document.getElementById('wa-delay').value) || 5;
+    const body  = { delay };
+    if (testNumber) body.test_number = testNumber;
+
+    fetch('/send-whatsapp', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(d => {
+        hideProgress();
+        if (onDone) onDone();
+        if (d.error) {
+            showStatus('✗ ' + d.error, 'error');
+        } else if (testNumber) {
+            const ok = d.sent > 0;
+            showStatus(ok ? `✓ Test message sent to ${testNumber}!` : `✗ Test failed: ${d.details?.[0]?.error || 'unknown error'}`, ok ? 'success' : 'error');
+        } else {
+            const pct = d.total ? Math.round((d.sent/d.total)*100) : 0;
+            showStatus(`✓ Campaign complete!\n📤 Sent: ${d.sent}   ✗ Failed: ${d.failed}   📋 Total: ${d.total}   (${pct}% success rate)`, 'success');
+        }
+    })
+    .catch(e => {
+        hideProgress();
+        if (onDone) onDone();
+        showStatus('✗ Network error: ' + e.message, 'error');
+    });
+}
+
+function showStatus(msg, type) {
+    const el = document.getElementById('wa-status');
+    el.textContent = msg; el.className = 'modal-status ' + type; el.style.display = 'block';
+}
+function resetStatus() {
+    const el = document.getElementById('wa-status');
+    el.style.display = 'none'; el.className = 'modal-status';
+}
+function showProgress(pct) {
+    document.getElementById('wa-progress-wrap').style.display = 'block';
+    document.getElementById('wa-progress-bar').style.width = pct + '%';
+}
+function hideProgress() { document.getElementById('wa-progress-wrap').style.display = 'none'; }
 </script>
 </body>
 </html>
