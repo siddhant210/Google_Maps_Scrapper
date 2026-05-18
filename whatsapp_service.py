@@ -50,13 +50,13 @@ def sanitize_phone(phone: str) -> str | None:
     Convert any Indian phone format to E.164 digits (no +).
     
     Handles all these formats:
-      8291061982          → 918291061982
-      +91 82910 61982     → 918291061982
-      091-82910-61982     → 918291061982
-      022 6884 6143       → 912268846143  (landline, 11 digits with 0)
-      080 6297 2766       → 918062972766  (landline)
-      1800 891 0001       → 918008910001  (toll-free, keep as-is with 91 prefix)
-      +918291061982       → 918291061982
+      18291061982          → 1918291061982
+      +911 82910 61982     → 1918291061982
+      091-182910-61982     → 1918291061982
+      022 6884 6143       → 1912268846143  (landline, 11 digits with 0)
+      080 6297 2766       → 1918062972766  (landline)
+      1800 891 0001       → 1918008910001  (toll-free, keep as-is with 91 prefix)
+      +9118291061982       → 1918291061982
     """
     if not phone:
         return None
