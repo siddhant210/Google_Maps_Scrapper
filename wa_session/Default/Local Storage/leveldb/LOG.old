@@ -1,3 +1,6 @@
-2026/05/18-15:45:43.761 34cc Reusing MANIFEST C:\Users\Asus\Desktop\google_maps_scraper\wa_session\Default\Local Storage\leveldb/MANIFEST-000001
-2026/05/18-15:45:43.767 34cc Recovering log #3
-2026/05/18-15:45:43.772 34cc Reusing old log C:\Users\Asus\Desktop\google_maps_scraper\wa_session\Default\Local Storage\leveldb/000003.log 
+2026/05/19-10:35:55.942 66cc Reusing MANIFEST C:\Users\Asus\Desktop\google_maps_scraper\wa_session\Default\Local Storage\leveldb/MANIFEST-000001
+2026/05/19-10:35:55.947 66cc Recovering log #6
+2026/05/19-10:35:55.950 66cc Reusing old log C:\Users\Asus\Desktop\google_maps_scraper\wa_session\Default\Local Storage\leveldb/000006.log 
+2026/05/19-10:36:04.004 b7c Level-0 table #10: started
+2026/05/19-10:36:04.013 b7c Level-0 table #10: 17256 bytes OK
+2026/05/19-10:36:04.018 b7c Delete type=0 #6

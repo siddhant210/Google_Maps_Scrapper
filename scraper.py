@@ -35,12 +35,10 @@ def scrape_google_maps(query):
         page = context.new_page()
 
         try:
-            # ── Step 1: Open Maps ────────────────────────────────────────────
             print("[scraper] Opening Google Maps...")
             page.goto("https://www.google.com/maps", wait_until="commit", timeout=30000)
             time.sleep(5)
 
-            # ── Step 2: Consent banner ───────────────────────────────────────
             for sel in ['button[aria-label="Accept all"]', 'button[aria-label="Reject all"]', 'button[jsname="b3VHJd"]']:
                 try:
                     btn = page.query_selector(sel)
@@ -50,7 +48,6 @@ def scrape_google_maps(query):
                 except Exception:
                     pass
 
-            # ── Step 3: Focus search box via JS ──────────────────────────────
             print("[scraper] Focusing search box...")
             page.evaluate("""
                 () => {
@@ -60,20 +57,13 @@ def scrape_google_maps(query):
             """)
             time.sleep(1)
 
-            # ── Step 4: Type query ───────────────────────────────────────────
             print(f"[scraper] Typing: '{query}'")
             page.keyboard.type(query, delay=100)
-            time.sleep(3)   # wait for autocomplete dropdown to appear
+            time.sleep(3)
             page.screenshot(path="debug/01_typed.png")
 
-            # ── Step 5: Click the SEARCH BUTTON (magnifier icon) ─────────────
-            # From your screenshot the search suggestions appeared fine.
-            # Instead of Enter (which traffic popup can intercept),
-            # click the blue search button directly.
             print("[scraper] Clicking search button...")
             clicked_search = False
-
-            # Try clicking the search icon button
             for sel in [
                 'button[aria-label="Search"]',
                 '#searchbox-searchbutton',
@@ -84,17 +74,14 @@ def scrape_google_maps(query):
                     btn = page.query_selector(sel)
                     if btn and btn.is_visible():
                         btn.click()
-                        print(f"[scraper] Clicked search button: {sel}")
+                        print(f"[scraper] Clicked: {sel}")
                         clicked_search = True
                         break
                 except Exception:
                     pass
 
             if not clicked_search:
-                # Fallback: click first autocomplete suggestion
-                print("[scraper] Fallback: clicking first autocomplete suggestion...")
                 try:
-                    # Autocomplete items are li elements in the dropdown
                     first = page.wait_for_selector(
                         'li.suggestions-list__item, div[data-index="0"], li[data-index="0"]',
                         timeout=3000
@@ -102,25 +89,20 @@ def scrape_google_maps(query):
                     if first:
                         first.click()
                         clicked_search = True
-                        print("[scraper] Clicked first suggestion.")
                 except Exception:
                     pass
 
             if not clicked_search:
-                # Last resort: press Enter
-                print("[scraper] Last resort: pressing Enter...")
                 page.keyboard.press("Enter")
 
             time.sleep(4)
             page.screenshot(path="debug/02_search_submitted.png")
 
-            # ── Step 6: Kill any popup that appeared ─────────────────────────
             print("[scraper] Killing any popups...")
             for _ in range(4):
                 page.keyboard.press("Escape")
                 time.sleep(0.4)
 
-            # Also try clicking close buttons
             for sel in ['button[aria-label="Close"]', 'button[jsname="twnHdb"]']:
                 try:
                     btn = page.query_selector(sel)
@@ -131,32 +113,27 @@ def scrape_google_maps(query):
                     pass
 
             time.sleep(2)
-            page.screenshot(path="debug/03_after_popup_kill.png")
 
-            # ── Step 7: Wait for results feed ────────────────────────────────
             print("[scraper] Waiting for results...")
             try:
                 page.wait_for_selector('div[role="feed"]', timeout=20000)
                 print("[scraper] ✓ Feed found!")
             except PlaywrightTimeout:
                 page.screenshot(path="debug/04_timeout.png")
-                print("[scraper] Trying articles fallback...")
                 try:
                     page.wait_for_selector('div[role="article"]', timeout=10000)
                     print("[scraper] ✓ Articles found!")
                 except PlaywrightTimeout:
-                    print("[scraper] No results. Check debug/04_timeout.png")
+                    print("[scraper] No results.")
                     browser.close()
                     return []
 
             time.sleep(2)
             page.screenshot(path="debug/04_results.png")
 
-            # ── Step 8: Scroll ───────────────────────────────────────────────
             print("[scraper] Scrolling results...")
             _scroll_results(page)
 
-            # ── Step 9: Scrape ───────────────────────────────────────────────
             cards = page.query_selector_all('div[role="article"]')
             print(f"[scraper] Scraping {len(cards)} cards...")
 
@@ -168,20 +145,22 @@ def scrape_google_maps(query):
                     name = _name(card)
                     if not name:
                         continue
-                    row = {
-                        "Name":     name,
-                        "Category": _category(card),
-                        "Rating":   _rating(card),
-                        "Reviews":  _reviews(card),
-                        "Latest Review": _latest_review(card),
-                        "Email":    _email(card),
-                        "Address":  _address(card),
-                        "Phone":    _phone(card),
-                        "Website":  _website(card),
-                    }
 
+                    addr, phone = _parse_card_fields(card)
+
+                    row = {
+                        "Name":          name,
+                        "Category":      _category(card),
+                        "Rating":        _rating(card),
+                        "Reviews":       _reviews(card),
+                        "Latest Review": _latest_review(card),
+                        "Email":         _email(card),
+                        "Address":       addr,
+                        "Phone":         phone,
+                        "Website":       _website(card),
+                    }
                     results.append(row)
-                    print(f"[scraper] [{i+1}] {name} | {row['Rating']} | {row['Address']}")
+                    print(f"[scraper] [{i+1}] {name} | {row['Rating']} | Phone: '{phone}' | Addr: '{addr[:40]}'")
                 except Exception as e:
                     print(f"[scraper] Card {i} error: {e}")
 
@@ -197,25 +176,20 @@ def scrape_google_maps(query):
             time.sleep(2)
             browser.close()
 
-    # Sort by rating highest first
     results.sort(key=lambda x: float(x["Rating"]) if x.get("Rating") else 0, reverse=True)
-
     print(f"[scraper] Done. Total: {len(results)}")
     return results
 
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _scroll_results(page):
     feed = page.query_selector('div[role="feed"]')
     if not feed:
         return
-    prev = 0
-    stale = 0
+    prev, stale = 0, 0
     for i in range(15):
-        cards = page.query_selector_all('div[role="article"]')
-        if len(cards) >= 100:
-            print("[scraper] Reached 100 card load limit during scroll.")
+        if len(page.query_selector_all('div[role="article"]')) >= 100:
             break
         feed.evaluate("el => el.scrollBy(0, 2500)")
         time.sleep(1.5)
@@ -224,12 +198,9 @@ def _scroll_results(page):
             break
         count = len(page.query_selector_all('div[role="article"]'))
         print(f"[scraper]   Scroll {i+1}: {count} cards")
-        if count == prev:
-            stale += 1
-            if stale >= 3:
-                break
-        else:
-            stale = 0
+        stale = stale + 1 if count == prev else 0
+        if stale >= 3:
+            break
         prev = count
 
 
@@ -278,28 +249,30 @@ def _category(card):
     return _safe(card, [".DkEaL", "span.emkBOd"])
 
 
-def _debug_card(card, name):
-    """Print all raw row text to understand the structure."""
-    try:
-        rows = card.query_selector_all(".W4Efsd")
-        print(f"\n[DEBUG] Card: {name}")
-        for i, row in enumerate(rows):
-            print(f"  W4Efsd[{i}]: {repr(row.inner_text().strip())}")
-        chips = card.query_selector_all(".Io6YTe")
-        for i, chip in enumerate(chips):
-            print(f"  Io6YTe[{i}]: {repr(chip.inner_text().strip())}")
-    except Exception as e:
-        print(f"  [DEBUG ERROR] {e}")
+def _parse_card_fields(card) -> tuple[str, str]:
+    """
+    Extract address and phone from the info rows inside a Google Maps card.
 
+    Each .W4Efsd row is a blob split by · like:
+      "Clothing store · Shop No 4, Sector 3 Airoli · Open · Closes 10pm · 086938 18779"
+      "Restaurant · ₹200–400 · Open now"
+      "Hotel · Sector 3, Plot 12 · 022 6884 6143"
 
-def _parse_card_fields(card):
+    Phone detection: a segment where ≥60% of non-space chars are digits, 
+    total digits ≥ 7. This handles:
+      "086938 18779"   ✓
+      "022 6884 6143"  ✓
+      "1800 891 0001"  ✓
+      "+91 98765 43210" ✓
+      "Sector 3"       ✗  (has letters, <60% digits)
+    """
     address = ""
     phone   = ""
 
-    phone_re  = re.compile(r'^(?:\+?\d[\d\s\-\(\)\.]{6,}\d)$')
-    rating_re = re.compile(r'^\d+(?:\.\d+)?\(\d{1,3}(?:,\d{3})*\)$')
-    price_re  = re.compile(r'[₹$€£]|^\d{2,4}\s*[-–]\s*\d{2,4}$')
-    status_re = re.compile(r'^(Open|Closed|Opens|Closes)', re.I)
+    # Patterns to skip
+    skip_re   = re.compile(r'^(Open|Closed|Opens|Closes|open|closed)', re.I)
+    price_re  = re.compile(r'[₹$€£]')
+    rating_re = re.compile(r'^\d+\.\d+\s*\(\d+')   # "4.5(1,234)"
 
     try:
         rows = card.query_selector_all(".W4Efsd")
@@ -307,26 +280,35 @@ def _parse_card_fields(card):
             raw = row.inner_text().strip()
             if not raw:
                 continue
+
             segments = [s.strip() for s in raw.split('·') if s.strip()]
 
             for seg in segments:
                 if len(seg) <= 2:
                     continue
-                if status_re.match(seg):
+                if skip_re.match(seg):
                     continue
                 if price_re.search(seg):
                     continue
                 if rating_re.match(seg):
                     continue
 
-                if phone_re.match(seg):
-                    digits = re.findall(r'\d', seg)
-                    if len(digits) >= 7 and not phone:
-                        phone = seg
-                        continue
+                # Count digits vs total non-space chars
+                non_space = re.sub(r'\s', '', seg)
+                digits    = re.sub(r'\D', '', seg)
+                digit_count = len(digits)
+                total_count = len(non_space) if non_space else 1
+                digit_ratio = digit_count / total_count
 
+                # Phone: mostly digits (≥55%), at least 7 digits total
+                if digit_ratio >= 0.55 and digit_count >= 7:
+                    if not phone:
+                        phone = seg.strip()
+                    continue
+
+                # Address: has letters, long enough, not already captured
                 if not address and re.search(r'[A-Za-z]', seg) and len(seg) > 5:
-                    address = seg
+                    address = seg.strip()
 
     except Exception:
         pass
@@ -366,54 +348,24 @@ def _latest_review(card):
 def _email(card):
     try:
         email_re = re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
-
         for a in card.query_selector_all('a[href^="mailto:"]'):
-            href = a.get_attribute("href") or ""
+            href  = a.get_attribute("href") or ""
             email = href.split("mailto:")[-1].split("?")[0].strip()
             if email:
                 return email
-
         for a in card.query_selector_all('a'):
-            href = a.get_attribute("href") or ""
+            href  = a.get_attribute("href") or ""
             match = email_re.search(href)
             if match:
                 return match.group(0).strip()
-
-        raw = card.inner_text() if hasattr(card, 'inner_text') else ""
-        match = email_re.search(raw or "")
+        raw   = card.inner_text() or ""
+        match = email_re.search(raw)
         if match:
             return match.group(0).strip()
-
-        try:
-            raw = card.content() if hasattr(card, 'content') else ""
-            match = email_re.search(raw or "")
-            if match:
-                return match.group(0).strip()
-        except Exception:
-            pass
     except Exception:
         pass
     return ""
 
-
-def _detail_scope(page):
-    try:
-        selectors = [
-            '#pane',
-            '[id^="pane"]',
-            'div[role="main"]',
-            'div.section-layout',
-        ]
-        for sel in selectors:
-            try:
-                scope = page.query_selector(sel)
-                if scope:
-                    return scope
-            except Exception:
-                pass
-    except Exception:
-        pass
-    return page
 
 def _website(card):
     try:
@@ -422,25 +374,14 @@ def _website(card):
             href = el.get_attribute("href") or ""
             if href:
                 return href
-
         for a in card.query_selector_all('a[href^="http"]'):
-            href = a.get_attribute("href") or ""
-            if not href:
-                continue
+            href  = a.get_attribute("href") or ""
             lower = href.lower()
-            if 'mailto:' in lower:
+            if not href or 'mailto:' in lower:
                 continue
-            if any(block in lower for block in ["maps.google.com", "google.com/maps", "g.page", "plus.codes", "googleusercontent.com"]):
+            if any(b in lower for b in ["maps.google.com", "google.com/maps", "g.page", "plus.codes", "googleusercontent.com"]):
                 continue
             return href
-
-        raw = card.inner_text() if hasattr(card, 'inner_text') else ""
-        if raw and 'http' in raw:
-            for match in re.findall(r'https?://[^\s,\)\]\>]+', raw):
-                lower = match.lower()
-                if any(block in lower for block in ["maps.google.com", "google.com/maps", "g.page", "plus.codes", "googleusercontent.com"]):
-                    continue
-                return match
     except Exception:
         pass
     return ""
