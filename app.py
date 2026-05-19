@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, send_file, jsonify
 from scraper import scrape_google_maps
-from whatsapp_service import load_template, save_template, send_bulk_whatsapp, sanitize_phone
+from whatsapp_service import (load_template, save_template, send_bulk_whatsapp,
+                               sanitize_phone, save_attachment, clear_attachment, get_attachment_path)
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -120,6 +121,48 @@ def whatsapp_lead_count():
     return jsonify({"total": total, "with_phone": with_phone})
 
 
+@app.route("/whatsapp-attachment", methods=["POST", "DELETE"])
+def whatsapp_attachment():
+    """Upload or remove the WhatsApp attachment."""
+    if request.method == "DELETE":
+        clear_attachment()
+        return jsonify({"success": True, "message": "Attachment removed"})
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["file"]
+    if not file.filename:
+        return jsonify({"error": "Empty filename"}), 400
+
+    # 20MB limit
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > 20 * 1024 * 1024:
+        return jsonify({"error": "File too large (max 20MB)"}), 400
+
+    path = save_attachment(file.read(), file.filename)
+    return jsonify({
+        "success":  True,
+        "filename": file.filename,
+        "size":     size,
+        "path":     path,
+    })
+
+
+@app.route("/whatsapp-attachment-info")
+def whatsapp_attachment_info():
+    path = get_attachment_path()
+    if path and os.path.exists(path):
+        return jsonify({
+            "has_attachment": True,
+            "filename": os.path.basename(path),
+            "size": os.path.getsize(path),
+        })
+    return jsonify({"has_attachment": False})
+
+
 @app.route("/send-whatsapp", methods=["POST"])
 def send_whatsapp():
     global scraped_data
@@ -127,16 +170,18 @@ def send_whatsapp():
     delay       = int(body.get("delay", 5))
     test_number = body.get("test_number", "").strip() or None
 
-    # If test mode, we don't need scraped data
     if not test_number and not scraped_data:
         return jsonify({"error": "No leads found. Scrape first."}), 400
 
     template = load_template()
+    attach   = get_attachment_path()
+
     try:
         results = send_bulk_whatsapp(
             scraped_data, template,
             delay_between=delay,
-            test_number=test_number
+            test_number=test_number,
+            attachment_path=attach,
         )
         return jsonify(results)
     except Exception as e:

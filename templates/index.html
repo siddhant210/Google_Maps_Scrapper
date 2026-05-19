@@ -17,14 +17,12 @@
         body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,229,160,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,160,.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
         .wrap { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
 
-        /* Header */
         .header { margin-bottom: 3rem; animation: fadeDown .5s ease both; }
         .header-tag { display: inline-flex; align-items: center; gap: .5rem; background: rgba(0,229,160,.08); border: 1px solid rgba(0,229,160,.2); color: var(--accent); font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; padding: .35rem .85rem; border-radius: 100px; margin-bottom: 1rem; }
         h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
         h1 span { color: var(--accent); }
         .subtitle { margin-top: .6rem; color: var(--muted); font-size: .95rem; }
 
-        /* Search */
         .search-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; display: flex; gap: .75rem; margin-bottom: 1.5rem; animation: fadeUp .5s .1s ease both; transition: border-color .2s; }
         .search-card:focus-within { border-color: rgba(0,229,160,.4); box-shadow: 0 0 0 3px rgba(0,229,160,.06); }
         .search-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Instrument Sans', sans-serif; font-size: 1rem; padding: .25rem .5rem; }
@@ -33,12 +31,10 @@
         .btn-scrape:hover { background: var(--accent2); }
         .btn-scrape:active { transform: scale(.97); }
 
-        /* Loading */
         #loading { display: none; align-items: center; gap: .75rem; background: rgba(0,229,160,.06); border: 1px solid rgba(0,229,160,.15); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: .88rem; color: var(--accent); }
         #loading.active { display: flex; }
         .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(0,229,160,.2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
 
-        /* Toolbar */
         .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; animation: fadeUp .4s .15s ease both; }
         .result-count { font-size: .85rem; color: var(--muted); }
         .result-count strong { color: var(--accent); font-size: 1rem; }
@@ -51,19 +47,12 @@
         .btn-wa:hover { background: var(--wa2); border-color: var(--wa2); }
         .btn-wa:disabled { background: #1a3a26; color: #2d6644; border-color: #1a3a26; cursor: not-allowed; }
 
-        /* Error */
         .error-box { background: rgba(255,77,109,.07); border: 1px solid rgba(255,77,109,.25); color: #ff8099; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: .88rem; }
 
-        /* Cards */
         .cards { display: grid; gap: .75rem; }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; display: grid; grid-template-columns: 1fr auto; gap: .75rem 1rem; transition: border-color .2s, transform .15s; animation: fadeUp .35s ease both; }
         .card:hover { border-color: rgba(0,229,160,.25); transform: translateY(-1px); }
-        .card:nth-child(1)  { animation-delay: .00s; }
-        .card:nth-child(2)  { animation-delay: .03s; }
-        .card:nth-child(3)  { animation-delay: .06s; }
-        .card:nth-child(4)  { animation-delay: .09s; }
-        .card:nth-child(5)  { animation-delay: .12s; }
-        .card:nth-child(n+6){ animation-delay: .15s; }
+        .card:nth-child(1) { animation-delay:.00s; } .card:nth-child(2) { animation-delay:.03s; } .card:nth-child(3) { animation-delay:.06s; } .card:nth-child(4) { animation-delay:.09s; } .card:nth-child(5) { animation-delay:.12s; } .card:nth-child(n+6) { animation-delay:.15s; }
         .card-left { min-width: 0; }
         .card-name { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: .2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .card-category { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: .65rem; }
@@ -75,15 +64,15 @@
         .rating-block { display: flex; flex-direction: column; align-items: flex-end; gap: .2rem; flex-shrink: 0; }
         .rating-badge { display: flex; align-items: center; gap: .3rem; background: rgba(251,191,36,.1); border: 1px solid rgba(251,191,36,.2); color: var(--gold); font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; padding: .35rem .75rem; border-radius: 8px; }
         .rating-reviews { font-size: .72rem; color: var(--muted); text-align: right; }
-        .empty { text-align: center; padding: 5rem 0; animation: fadeUp .4s ease both; }
+        .empty { text-align: center; padding: 5rem 0; }
         .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
         .empty h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; color: var(--muted); margin-bottom: .4rem; }
         .empty p { font-size: .88rem; color: #4a4a5a; }
 
-        /* ── WhatsApp Modal ── */
+        /* ── Modal ── */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 200; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(4px); }
         .modal-overlay.open { display: flex; }
-        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; width: 100%; max-width: 540px; max-height: 92vh; overflow-y: auto; animation: fadeUp .25s ease both; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; animation: fadeUp .25s ease both; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .modal-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: .6rem; }
         .modal-close { background: none; border: none; color: var(--muted); font-size: 1.6rem; cursor: pointer; line-height: 1; transition: color .15s; }
@@ -96,23 +85,59 @@
         .modal-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: .75rem 1rem; color: var(--text); font-family: 'Instrument Sans', sans-serif; font-size: .9rem; outline: none; transition: border-color .2s; }
         .modal-input:focus { border-color: rgba(0,229,160,.4); }
         .modal-hint { margin-top: .35rem; font-size: .74rem; color: var(--muted); }
-
-        /* divider */
         .modal-divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
 
-        /* test section */
+        /* ── Attachment upload zone ── */
+        .attach-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+            position: relative;
+        }
+        .attach-zone:hover, .attach-zone.drag-over {
+            border-color: rgba(0,229,160,.5);
+            background: rgba(0,229,160,.04);
+        }
+        .attach-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .attach-icon { font-size: 1.8rem; margin-bottom: .4rem; }
+        .attach-text { font-size: .85rem; color: var(--muted); }
+        .attach-text strong { color: var(--accent); }
+        .attach-types { font-size: .73rem; color: #4a4a5a; margin-top: .25rem; }
+
+        /* Uploaded file preview */
+        .attach-preview {
+            display: none;
+            align-items: center;
+            gap: .75rem;
+            background: rgba(0,229,160,.06);
+            border: 1px solid rgba(0,229,160,.2);
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            margin-top: .75rem;
+        }
+        .attach-preview.show { display: flex; }
+        .attach-preview-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .attach-preview-name { flex: 1; font-size: .85rem; color: var(--accent); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .attach-preview-size { font-size: .75rem; color: var(--muted); flex-shrink: 0; }
+        .attach-remove { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 0 .2rem; transition: color .15s; flex-shrink: 0; }
+        .attach-remove:hover { color: #ff8099; }
+
+        /* ── Test section ── */
         .test-section { background: rgba(251,191,36,.04); border: 1px solid rgba(251,191,36,.15); border-radius: 12px; padding: 1rem; margin-bottom: 1.1rem; }
-        .test-label { font-size: .78rem; font-weight: 600; color: #fbbf24; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .6rem; display: flex; align-items: center; gap: .4rem; }
+        .test-label { font-size: .78rem; font-weight: 600; color: #fbbf24; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .6rem; }
         .test-row { display: flex; gap: .6rem; }
         .test-row .modal-input { flex: 1; }
         .btn-test { background: rgba(251,191,36,.15); color: #fbbf24; border: 1px solid rgba(251,191,36,.3); border-radius: 10px; padding: .75rem 1rem; font-family: 'Instrument Sans', sans-serif; font-size: .82rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .15s; }
         .btn-test:hover { background: rgba(251,191,36,.25); }
-        .btn-test:active { transform: scale(.97); }
 
         .modal-actions { display: flex; gap: .6rem; }
         .modal-btn { flex: 1; border: none; border-radius: 10px; padding: .8rem; font-family: 'Instrument Sans', sans-serif; font-size: .88rem; font-weight: 700; cursor: pointer; transition: all .15s; }
-        .modal-btn:active { transform: scale(.97); }
-        .modal-btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+        .modal-btn:disabled { opacity: .4; cursor: not-allowed; }
         .modal-btn-save { background: var(--surface2); color: var(--accent); border: 1px solid rgba(0,229,160,.3); }
         .modal-btn-save:hover { background: rgba(0,229,160,.1); }
         .modal-btn-send { background: var(--wa); color: #fff; }
@@ -120,7 +145,6 @@
 
         .progress-wrap { margin-top: .85rem; background: var(--surface2); border-radius: 100px; height: 6px; overflow: hidden; display: none; }
         .progress-bar { height: 100%; background: var(--wa); border-radius: 100px; width: 0%; transition: width .4s ease; }
-
         .modal-status { display: none; margin-top: .85rem; padding: .85rem 1rem; border-radius: 10px; font-size: .84rem; line-height: 1.6; white-space: pre-line; }
         .modal-status.info    { background: rgba(251,191,36,.07); color: #fbbf24; border: 1px solid rgba(251,191,36,.2); }
         .modal-status.success { background: rgba(37,211,102,.07); color: #25d366; border: 1px solid rgba(37,211,102,.2); }
@@ -133,7 +157,6 @@
 </head>
 <body>
 <div class="wrap">
-
     <div class="header">
         <div class="header-tag">📍 Lead Generator</div>
         <h1>Maps <span>Scraper</span></h1>
@@ -142,28 +165,19 @@
 
     <form action="/scrape" method="POST" onsubmit="showLoading()">
         <div class="search-card">
-            <input class="search-input" type="text" name="query"
-                placeholder="e.g. restaurants in Bandra, shops in Airoli…" required autocomplete="off" />
+            <input class="search-input" type="text" name="query" placeholder="e.g. restaurants in Bandra, shops in Airoli…" required autocomplete="off" />
             <button type="submit" class="btn-scrape">⚡ Scrape</button>
         </div>
     </form>
 
-    <div id="loading">
-        <div class="spinner"></div>
-        <span>Scraping Google Maps — usually 30–60 seconds…</span>
-    </div>
+    <div id="loading"><div class="spinner"></div><span>Scraping Google Maps — usually 30–60 seconds…</span></div>
 
-    {% if error %}
-    <div class="error-box">⚠ {{ error }}</div>
-    {% endif %}
+    {% if error %}<div class="error-box">⚠ {{ error }}</div>{% endif %}
 
     <div class="toolbar">
-        <div class="result-count">
-            {% if data %}<strong>{{ data|length }}</strong> businesses found{% endif %}
-        </div>
+        <div class="result-count">{% if data %}<strong>{{ data|length }}</strong> businesses found{% endif %}</div>
         <div class="toolbar-right">
-            <button class="btn btn-wa" id="wa-open-btn" onclick="openWaModal()"
-                {% if not data %}disabled title="Scrape some leads first"{% endif %}>
+            <button class="btn btn-wa" id="wa-open-btn" onclick="openWaModal()" {% if not data %}disabled title="Scrape some leads first"{% endif %}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
                 WhatsApp
             </button>
@@ -202,16 +216,14 @@
     <div class="empty">
         <span class="empty-icon">🗺️</span>
         <h2>No results yet</h2>
-        <p>Enter a search query above and hit <strong>Scrape</strong> to get started.</p>
+        <p>Enter a query above and hit <strong>Scrape</strong>.</p>
     </div>
     {% endif %}
-
 </div>
 
 <!-- ── WhatsApp Modal ── -->
 <div class="modal-overlay" id="wa-overlay" onclick="overlayClick(event)">
   <div class="modal">
-
     <div class="modal-header">
       <div class="modal-title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
@@ -220,15 +232,34 @@
       <button class="modal-close" onclick="closeWaModal()">×</button>
     </div>
 
-    <div class="modal-info">
-      💡 <strong>First time?</strong> A browser will open WhatsApp Web — scan the QR once with your phone. Session is saved — never need to scan again.
-    </div>
+    <div class="modal-info">💡 <strong>First time?</strong> A browser will open WhatsApp Web — scan the QR once. Session is saved forever after.</div>
 
     <!-- Template -->
     <div class="modal-field">
       <label class="modal-label">Message Template</label>
       <textarea class="modal-textarea" id="wa-template" placeholder="Hi {name}..."></textarea>
       <div class="modal-hint">Variables: <code style="color:var(--accent)">{name}</code> &nbsp;<code style="color:var(--accent)">{address}</code> &nbsp;<code style="color:var(--accent)">{rating}</code></div>
+    </div>
+
+    <!-- Attachment -->
+    <div class="modal-field">
+      <label class="modal-label">Attachment <span style="color:#4a4a5a;font-weight:400;text-transform:none;letter-spacing:0">(optional — image, PDF, video, doc)</span></label>
+      <div class="attach-zone" id="attach-zone"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleDrop(event)">
+        <input type="file" id="attach-input" accept="*/*" onchange="handleFileSelect(event)" />
+        <div class="attach-icon">📎</div>
+        <div class="attach-text"><strong>Click to upload</strong> or drag & drop</div>
+        <div class="attach-types">Images · PDF · Video · Word · Excel · Any file up to 20MB</div>
+      </div>
+      <!-- Preview of uploaded file -->
+      <div class="attach-preview" id="attach-preview">
+        <span class="attach-preview-icon" id="attach-preview-icon">📄</span>
+        <span class="attach-preview-name" id="attach-preview-name"></span>
+        <span class="attach-preview-size" id="attach-preview-size"></span>
+        <button class="attach-remove" onclick="removeAttachment()" title="Remove attachment">✕</button>
+      </div>
     </div>
 
     <!-- Delay -->
@@ -246,16 +277,14 @@
 
     <div class="modal-divider"></div>
 
-    <!-- Test number -->
+    <!-- Test -->
     <div class="test-section">
       <div class="test-label">🧪 Test Mode — send to your number first</div>
       <div class="test-row">
-        <input class="modal-input" type="text" id="wa-test-number"
-            placeholder="e.g. 8291061982 or +918291061982"
-            value="8291061982" />
+        <input class="modal-input" type="text" id="wa-test-number" placeholder="e.g. 8291061982" value="8291061982" />
         <button class="btn-test" onclick="sendTest()">▶ Send Test</button>
       </div>
-      <div class="modal-hint" style="margin-top:.5rem;">Enter your mobile number to test before bulk sending</div>
+      <div class="modal-hint" style="margin-top:.5rem;">Test on yourself before bulk sending</div>
     </div>
 
     <!-- Actions -->
@@ -264,113 +293,142 @@
       <button class="modal-btn modal-btn-send" id="wa-send-btn" onclick="sendAll()">📤 Send to All Leads</button>
     </div>
 
-    <div class="progress-wrap" id="wa-progress-wrap">
-      <div class="progress-bar" id="wa-progress-bar"></div>
-    </div>
-
+    <div class="progress-wrap" id="wa-progress-wrap"><div class="progress-bar" id="wa-progress-bar"></div></div>
     <div class="modal-status" id="wa-status"></div>
-
   </div>
 </div>
 
 <script>
 function showLoading() { document.getElementById('loading').classList.add('active'); }
-
-function openWaModal() {
-    document.getElementById('wa-overlay').classList.add('open');
-    loadTemplate(); updateLeadCount();
-}
-function closeWaModal() {
-    document.getElementById('wa-overlay').classList.remove('open');
-    resetStatus();
-}
-function overlayClick(e) {
-    if (e.target === document.getElementById('wa-overlay')) closeWaModal();
-}
+function openWaModal()  { document.getElementById('wa-overlay').classList.add('open'); loadTemplate(); updateLeadCount(); loadAttachmentInfo(); }
+function closeWaModal() { document.getElementById('wa-overlay').classList.remove('open'); resetStatus(); }
+function overlayClick(e){ if (e.target === document.getElementById('wa-overlay')) closeWaModal(); }
 
 function loadTemplate() {
-    fetch('/whatsapp-template').then(r => r.json())
-        .then(d => { document.getElementById('wa-template').value = d.template || ''; })
-        .catch(() => {});
+    fetch('/whatsapp-template').then(r=>r.json())
+        .then(d=>{ document.getElementById('wa-template').value = d.template||''; }).catch(()=>{});
+}
+function updateLeadCount() {
+    fetch('/whatsapp-lead-count').then(r=>r.json())
+        .then(d=>{ document.getElementById('wa-lead-count').value = `${d.with_phone} of ${d.total} leads have a valid phone number`; }).catch(()=>{});
+}
+function loadAttachmentInfo() {
+    fetch('/whatsapp-attachment-info').then(r=>r.json())
+        .then(d=>{ if (d.has_attachment) showAttachPreview(d.filename, d.size); }).catch(()=>{});
 }
 
-function updateLeadCount() {
-    fetch('/whatsapp-lead-count').then(r => r.json())
+/* ── Attachment handling ── */
+function fileIcon(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if (['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) return '🖼️';
+    if (ext === 'pdf') return '📕';
+    if (['mp4','mov','avi','mkv'].includes(ext)) return '🎬';
+    if (['doc','docx'].includes(ext)) return '📝';
+    if (['xls','xlsx'].includes(ext)) return '📊';
+    return '📎';
+}
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+function showAttachPreview(name, size) {
+    document.getElementById('attach-preview-icon').textContent = fileIcon(name);
+    document.getElementById('attach-preview-name').textContent = name;
+    document.getElementById('attach-preview-size').textContent = formatSize(size);
+    document.getElementById('attach-preview').classList.add('show');
+}
+function hideAttachPreview() {
+    document.getElementById('attach-preview').classList.remove('show');
+}
+
+function handleFileSelect(e) { uploadFile(e.target.files[0]); }
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('attach-zone').classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]);
+}
+
+function uploadFile(file) {
+    if (!file) return;
+    if (file.size > 20 * 1024 * 1024) { showStatus('File too large (max 20MB)', 'error'); return; }
+
+    showStatus(`Uploading ${file.name}...`, 'info');
+    const fd = new FormData();
+    fd.append('file', file);
+
+    fetch('/whatsapp-attachment', { method: 'POST', body: fd })
+        .then(r => r.json())
         .then(d => {
-            document.getElementById('wa-lead-count').value =
-                `${d.with_phone} of ${d.total} leads have a valid phone number`;
+            if (d.success) {
+                showAttachPreview(d.filename, d.size);
+                showStatus(`✓ ${d.filename} attached (${formatSize(d.size)})`, 'success');
+            } else {
+                showStatus('✗ ' + d.error, 'error');
+            }
+        })
+        .catch(e => showStatus('✗ Upload failed: ' + e.message, 'error'));
+}
+
+function removeAttachment() {
+    fetch('/whatsapp-attachment', { method: 'DELETE' })
+        .then(() => {
+            hideAttachPreview();
+            document.getElementById('attach-input').value = '';
+            showStatus('Attachment removed', 'info');
         }).catch(() => {});
 }
 
+/* ── Send ── */
 function saveWaTemplate() {
     const t = document.getElementById('wa-template').value.trim();
     if (!t) { showStatus('Template cannot be empty', 'error'); return; }
-    fetch('/whatsapp-template', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({template: t})
-    }).then(r => r.json())
-      .then(d => showStatus(d.success ? '✓ Template saved!' : '✗ ' + d.error, d.success ? 'success' : 'error'))
-      .catch(e => showStatus('✗ ' + e.message, 'error'));
+    fetch('/whatsapp-template', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({template:t}) })
+        .then(r=>r.json()).then(d=>showStatus(d.success?'✓ Template saved!':'✗ '+d.error, d.success?'success':'error'))
+        .catch(e=>showStatus('✗ '+e.message,'error'));
 }
 
 function sendTest() {
     const num = document.getElementById('wa-test-number').value.trim();
-    if (!num) { showStatus('Enter a test number first', 'error'); return; }
-    showStatus(`Sending test message to ${num}...\n(WhatsApp Web browser will open)`, 'info');
+    if (!num) { showStatus('Enter a test number first','error'); return; }
+    showStatus(`Sending test to ${num}... (WhatsApp Web will open)`, 'info');
     _doSend(num);
 }
 
 function sendAll() {
     const btn = document.getElementById('wa-send-btn');
     btn.disabled = true; btn.textContent = '⏳ Sending…';
-    showStatus('Starting campaign — WhatsApp Web will open. Keep the browser open until done.', 'info');
+    showStatus('Campaign starting — keep the WhatsApp browser open!', 'info');
     showProgress(10);
-    _doSend(null, () => { btn.disabled = false; btn.textContent = '📤 Send to All Leads'; });
+    _doSend(null, ()=>{ btn.disabled=false; btn.textContent='📤 Send to All Leads'; });
 }
 
 function _doSend(testNumber, onDone) {
-    const delay = parseInt(document.getElementById('wa-delay').value) || 5;
+    const delay = parseInt(document.getElementById('wa-delay').value)||5;
     const body  = { delay };
     if (testNumber) body.test_number = testNumber;
-
-    fetch('/send-whatsapp', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(body)
-    })
-    .then(r => r.json())
-    .then(d => {
-        hideProgress();
-        if (onDone) onDone();
-        if (d.error) {
-            showStatus('✗ ' + d.error, 'error');
-        } else if (testNumber) {
-            const ok = d.sent > 0;
-            showStatus(ok ? `✓ Test message sent to ${testNumber}!` : `✗ Test failed: ${d.details?.[0]?.error || 'unknown error'}`, ok ? 'success' : 'error');
-        } else {
-            const pct = d.total ? Math.round((d.sent/d.total)*100) : 0;
-            showStatus(`✓ Campaign complete!\n📤 Sent: ${d.sent}   ✗ Failed: ${d.failed}   📋 Total: ${d.total}   (${pct}% success rate)`, 'success');
-        }
-    })
-    .catch(e => {
-        hideProgress();
-        if (onDone) onDone();
-        showStatus('✗ Network error: ' + e.message, 'error');
-    });
+    fetch('/send-whatsapp', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
+        .then(r=>r.json())
+        .then(d=>{
+            hideProgress(); if(onDone) onDone();
+            if (d.error) { showStatus('✗ '+d.error,'error'); return; }
+            if (testNumber) {
+                showStatus(d.sent>0 ? `✓ Test sent to ${testNumber}!` : `✗ Test failed: ${d.details?.[0]?.error||'unknown'}`, d.sent>0?'success':'error');
+            } else {
+                const pct = d.total ? Math.round(d.sent/d.total*100) : 0;
+                showStatus(`✓ Campaign complete!\n📤 Sent: ${d.sent}   ✗ Failed: ${d.failed}   📋 Total: ${d.total}   (${pct}% success)`, 'success');
+            }
+        })
+        .catch(e=>{ hideProgress(); if(onDone) onDone(); showStatus('✗ '+e.message,'error'); });
 }
 
 function showStatus(msg, type) {
     const el = document.getElementById('wa-status');
-    el.textContent = msg; el.className = 'modal-status ' + type; el.style.display = 'block';
+    el.textContent = msg; el.className='modal-status '+type; el.style.display='block';
 }
-function resetStatus() {
-    const el = document.getElementById('wa-status');
-    el.style.display = 'none'; el.className = 'modal-status';
-}
-function showProgress(pct) {
-    document.getElementById('wa-progress-wrap').style.display = 'block';
-    document.getElementById('wa-progress-bar').style.width = pct + '%';
-}
-function hideProgress() { document.getElementById('wa-progress-wrap').style.display = 'none'; }
+function resetStatus() { const el=document.getElementById('wa-status'); el.style.display='none'; el.className='modal-status'; }
+function showProgress(p) { document.getElementById('wa-progress-wrap').style.display='block'; document.getElementById('wa-progress-bar').style.width=p+'%'; }
+function hideProgress() { document.getElementById('wa-progress-wrap').style.display='none'; }
 </script>
 </body>
 </html>
