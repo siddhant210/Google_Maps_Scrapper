@@ -2,14 +2,21 @@
 WhatsApp service using Playwright.
 
 KEY FIXES:
-1. Images sent via clipboard paste (Ctrl+V) → always renders as photo, never sticker
+1. Images sent via Photos & Videos attach input → always renders as photo, never sticker
 2. PDFs/docs sent via document file input → renders as file attachment
 3. Send button found via multiple strategies + Enter fallback
 4. Bulk send properly iterates all leads
 """
 
-import json, os, re, time, urllib.parse, base64, mimetypes
+import json, os, re, time, urllib.parse, base64, mimetypes, io, csv
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+
+try:
+    import openpyxl
+    OPENPYXL_OK = True
+except ImportError:
+    OPENPYXL_OK = False
+    print("[WA] WARNING: openpyxl not installed. Run: pip install openpyxl")
 
 TEMPLATE_FILE  = "whatsapp_template.json"
 SESSION_DIR    = "wa_session"
@@ -60,6 +67,96 @@ def clear_attachment():
             except Exception: pass
 
 
+# ── Parse leads from uploaded Excel / CSV ────────────────────────────────────
+
+def extract_leads_from_file(data: bytes, filename: str) -> list[dict]:
+    """
+    Extract leads (Name + Phone) from an uploaded Excel (.xlsx/.xls) or CSV file.
+    Returns list of dicts with at least 'Name' and 'Phone' keys.
+    """
+    ext  = os.path.splitext(filename)[1].lower()
+    rows = []
+
+    try:
+        if ext in ('.xlsx', '.xls'):
+            if not OPENPYXL_OK:
+                raise ImportError("openpyxl is not installed. Run: pip install openpyxl")
+            wb = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+            ws = wb.active
+            headers = None
+            for row in ws.iter_rows(values_only=True):
+                vals = [str(c).strip() if c is not None else '' for c in row]
+                if not any(vals):
+                    continue
+                if headers is None:
+                    headers = [v.lower().strip() for v in vals]
+                    continue
+                entry = {}
+                for i, h in enumerate(headers):
+                    entry[h] = vals[i] if i < len(vals) else ''
+                rows.append(entry)
+            print(f"[extract_leads] xlsx: {len(rows)} data rows, headers={headers}")
+
+        elif ext == '.csv':
+            # Try utf-8 first, fall back to latin-1
+            for enc in ('utf-8-sig', 'utf-8', 'latin-1'):
+                try:
+                    text   = data.decode(enc)
+                    reader = csv.DictReader(io.StringIO(text))
+                    rows   = [{k.lower().strip(): str(v).strip() for k, v in row.items()} for row in reader]
+                    print(f"[extract_leads] csv ({enc}): {len(rows)} rows")
+                    break
+                except Exception:
+                    continue
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
+
+    except Exception as e:
+        print(f"[extract_leads] Parse error: {e}")
+        raise  # re-raise so Flask route can return the real error message
+
+    phone_keys = ['phone','mobile','contact','number','tel','cell','whatsapp','ph',
+                  'phonenumber','phone number','mobile number','contact number',
+                  'phone no','mobile no','contact no']
+    name_keys  = ['name','business','company','firm','title','business name','shop',
+                  'customer name','client name']
+
+    leads = []
+    for row in rows:
+        phone = ''
+        for k in phone_keys:
+            if k in row and row[k]:
+                phone = row[k]; break
+        if not phone:
+            # grab any value where ≥60% chars are digits and total digits ≥ 7
+            for k, v in row.items():
+                v = v.strip()
+                digits = re.sub(r'\D', '', v)
+                non_space = re.sub(r'\s', '', v)
+                if len(digits) >= 7 and (len(non_space) == 0 or len(digits)/len(non_space) >= 0.55):
+                    phone = v; break
+
+        name = ''
+        for k in name_keys:
+            if k in row and row[k]:
+                name = row[k]; break
+        if not name:
+            # first non-phone, non-empty value
+            name = next((v for k, v in row.items() if v and k not in phone_keys
+                         and not re.fullmatch(r'[\d\s\+\-\(\)\.]+', v)), 'Lead')
+
+        if phone:
+            leads.append({
+                'Name':    name.strip(),
+                'Phone':   phone.strip(),
+                'Address': row.get('address', row.get('addr', row.get('location', ''))),
+                'Rating':  row.get('rating', ''),
+            })
+
+    print(f"[extract_leads] {filename}: {len(rows)} rows → {len(leads)} leads with phone")
+    return leads
+
+
 # ── Phone sanitiser ───────────────────────────────────────────────────────────
 
 def sanitize_phone(phone: str) -> str | None:
@@ -97,7 +194,6 @@ def send_bulk_whatsapp(leads: list[dict], template: str,
         send_list = [{"lead":{"Name":"Test User","Address":"Test","Rating":"5.0"},"phone":phone}]
         print(f"[WA] TEST → {phone}")
     else:
-        # Apply chunk
         working = leads
         if chunk_start and chunk_end:
             working = leads[chunk_start-1 : chunk_end]
@@ -126,16 +222,15 @@ def send_bulk_whatsapp(leads: list[dict], template: str,
         print("[WA] Nothing to send.")
         return results
 
-    # Resolve attachment
-    attach = attachment_path or get_attachment_path()
+    attach   = attachment_path or get_attachment_path()
     if attach and not os.path.exists(attach): attach = None
     print(f"[WA] Attachment: {os.path.basename(attach) if attach else 'None'}")
 
-    # Detect if attachment is an image/video
     is_media = False
     if attach:
-        ext = os.path.splitext(attach)[1].lower()
-        is_media = ext in ('.jpg','.jpeg','.png','.gif','.webp','.bmp','.mp4','.mov','.avi','.mkv','.webm')
+        ext      = os.path.splitext(attach)[1].lower()
+        is_media = ext in ('.jpg','.jpeg','.png','.gif','.webp','.bmp',
+                           '.mp4','.mov','.avi','.mkv','.webm')
 
     os.makedirs(SESSION_DIR, exist_ok=True)
 
@@ -147,14 +242,11 @@ def send_bulk_whatsapp(leads: list[dict], template: str,
             args=[
                 "--disable-blink-features=AutomationControlled",
                 "--no-sandbox",
-                # Allow clipboard access for paste approach
-                "--enable-features=UseOzonePlatform",
             ],
         )
         page = context.new_page()
 
         try:
-            # ── Login ─────────────────────────────────────────────────────
             print("[WA] Opening WhatsApp Web...")
             page.goto("https://web.whatsapp.com", wait_until="domcontentloaded", timeout=30000)
             time.sleep(4)
@@ -176,7 +268,6 @@ def send_bulk_whatsapp(leads: list[dict], template: str,
             print("[WA] ✓ Logged in!")
             time.sleep(2)
 
-            # ── Send loop ─────────────────────────────────────────────────
             for i, item in enumerate(send_list):
                 lead  = item["lead"]
                 phone = item["phone"]
@@ -190,7 +281,7 @@ def send_bulk_whatsapp(leads: list[dict], template: str,
                 print(f"\n[WA] [{i+1}/{len(send_list)}] → {name} ({phone})")
 
                 if attach and is_media:
-                    ok, err = _send_image_clipboard(page, phone, message, attach)
+                    ok, err = _send_image_via_attach(page, phone, message, attach)
                 elif attach:
                     ok, err = _send_document(page, phone, message, attach)
                 else:
@@ -233,7 +324,6 @@ def _send_text(page, phone, message):
 
         box.click(); time.sleep(0.5)
 
-        # Check pre-fill worked
         try: txt = (box.text_content() or "").strip()
         except Exception: txt = ""
         if not txt:
@@ -247,20 +337,21 @@ def _send_text(page, phone, message):
         return False, str(e)
 
 
-# ── Image via clipboard paste ─────────────────────────────────────────────────
+# ── Image via Photos & Videos attach input (FIXED — never sends as sticker) ───
 
-def _send_image_clipboard(page, phone, message, file_path):
+def _send_image_via_attach(page, phone, message, file_path):
     """
-    Paste image from clipboard into WhatsApp Web.
-    This ALWAYS renders as a proper photo — never a sticker or file.
+    Send image using WhatsApp's Photos & Videos file input.
+    Using the image/* accept input means WhatsApp ALWAYS renders it as a
+    normal photo in the chat — never as a sticker or document.
 
-    How it works:
-      1. Open the chat
-      2. Use JavaScript to write the image to the clipboard as image/png
-      3. Focus the message input box
-      4. Press Ctrl+V → WhatsApp shows the image preview
+    Flow:
+      1. Open chat
+      2. Click the attach (paperclip) button
+      3. Set the file on the image/video file input directly
+      4. Wait for preview
       5. Type caption
-      6. Click Send / press Enter
+      6. Click Send
     """
     try:
         page.goto(f"https://web.whatsapp.com/send?phone={phone}",
@@ -271,46 +362,71 @@ def _send_image_clipboard(page, phone, message, file_path):
         box = _wait_input(page)
         if not box: return False, "Chat did not open"
 
-        # Read image file and encode as base64
-        with open(file_path, 'rb') as f:
-            img_bytes = f.read()
+        # ── Step 1: Click the paperclip / attach button ───────────────────
+        attach_btn = None
+        for sel in [
+            'div[title="Attach"]',
+            'button[title="Attach"]',
+            '[data-testid="attach-menu-plus"]',
+            'span[data-icon="attach"]',
+            'div[aria-label="Attach"]',
+            'button[aria-label="Attach"]',
+        ]:
+            try:
+                el = page.query_selector(sel)
+                if el and el.is_visible():
+                    attach_btn = el; break
+            except Exception: continue
 
-        ext  = os.path.splitext(file_path)[1].lower()
-        mime = {'.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg',
-                '.gif':'image/gif','.webp':'image/webp','.bmp':'image/bmp'}.get(ext,'image/png')
+        if not attach_btn:
+            return False, "Attach button not found"
 
-        b64 = base64.b64encode(img_bytes).decode('utf-8')
+        attach_btn.click()
+        time.sleep(1.5)
 
-        # Write image to clipboard via JS ClipboardItem API
-        print(f"[WA]   Writing image to clipboard ({mime}, {len(img_bytes)//1024}KB)...")
-        clipboard_result = page.evaluate(f"""
-            async () => {{
-                try {{
-                    const b64 = '{b64}';
-                    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-                    const blob  = new Blob([bytes], {{ type: '{mime}' }});
-                    const item  = new ClipboardItem({{ '{mime}': blob }});
-                    await navigator.clipboard.write([item]);
-                    return 'ok';
-                }} catch(e) {{
-                    return 'err:' + e.message;
-                }}
-            }}
-        """)
-        print(f"[WA]   Clipboard write: {clipboard_result}")
+        # ── Step 2: Use the Photos & Videos file input ────────────────────
+        # This is the key fix: WhatsApp has a separate <input accept="image/*,video/...">
+        # for photos/videos. Files set on THIS input are always sent as media, not stickers.
+        uploaded = False
 
-        if clipboard_result and clipboard_result.startswith('err'):
-            # Clipboard API failed — fallback to document upload
-            print("[WA]   Clipboard failed, falling back to document upload")
+        for sel in [
+            'input[type="file"][accept="image/*,video/mp4,video/3gpp,video/quicktime"]',
+            'input[type="file"][accept*="image/"][accept*="video"]',
+            'input[type="file"][accept*="image/"]',
+            'input[accept*="image"]',
+        ]:
+            try:
+                el = page.query_selector(sel)
+                if el:
+                    el.set_input_files(file_path)
+                    print(f"[WA]   ✓ Image file input: {sel}")
+                    uploaded = True; break
+            except Exception: continue
+
+        # Fallback: try clicking "Photos & Videos" menu item with file chooser
+        if not uploaded:
+            for sel in [
+                'span:has-text("Photos & Videos")',
+                'li:has-text("Photos")',
+                '[data-testid="mi-attach-image"]',
+            ]:
+                try:
+                    el = page.query_selector(sel)
+                    if el and el.is_visible():
+                        with page.expect_file_chooser(timeout=4000) as fc:
+                            el.click()
+                        fc.value.set_files(file_path)
+                        print(f"[WA]   ✓ Photos menu item: {sel}")
+                        uploaded = True; break
+                except Exception: continue
+
+        if not uploaded:
+            print("[WA]   Image input not found — falling back to document send")
             return _send_document(page, phone, message, file_path)
 
-        # Focus the chat input and paste
-        box.click(); time.sleep(0.5)
-        page.keyboard.press("Control+v")
-        time.sleep(3)  # wait for image preview to appear
+        time.sleep(3)  # wait for preview to render
 
-        # ── Now in the image preview screen ──────────────────────────────
-        # Type caption in the caption input
+        # ── Step 3: Type caption ──────────────────────────────────────────
         if message:
             caption_box = None
             for sel in [
@@ -329,11 +445,10 @@ def _send_image_clipboard(page, phone, message, file_path):
                 caption_box.click(); time.sleep(0.3)
                 page.keyboard.type(message, delay=15)
             else:
-                # Just type — focus should be on caption area
                 page.keyboard.type(message, delay=15)
             time.sleep(0.8)
 
-        # ── Click Send ────────────────────────────────────────────────────
+        # ── Step 4: Click Send ────────────────────────────────────────────
         sent = False
         for sel in [
             'div[aria-label="Send"]',
@@ -375,7 +490,6 @@ def _send_document(page, phone, message, file_path):
         box = _wait_input(page)
         if not box: return False, "Chat did not open"
 
-        # Click attach button
         attach_btn = None
         for sel in ['div[title="Attach"]','button[title="Attach"]','[data-testid="attach-menu-plus"]',
                     'span[data-icon="attach"]','div[aria-label="Attach"]','button[aria-label="Attach"]']:
@@ -389,7 +503,6 @@ def _send_document(page, phone, message, file_path):
 
         attach_btn.click(); time.sleep(1.5)
 
-        # Find document file input
         file_input = None
         for sel in ['input[type="file"][accept="*"]','input[type="file"]']:
             try:
@@ -428,7 +541,6 @@ def _send_document(page, phone, message, file_path):
                 except Exception: continue
             time.sleep(0.8)
 
-        # Send
         sent = False
         for sel in ['div[aria-label="Send"]','button[aria-label="Send"]',
                     'span[data-icon="send"]','[data-testid="send"]']:
@@ -487,7 +599,6 @@ def _press_send(page, box):
                 print(f"[WA]   Send clicked: {sel}")
                 return True
         except Exception: continue
-    # Fallback
     print("[WA]   No send button — pressing Enter")
     box.click()
     page.keyboard.press("Enter")

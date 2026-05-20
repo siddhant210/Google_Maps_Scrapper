@@ -92,6 +92,26 @@
         .attach-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0 .2rem;transition:color .15s;flex-shrink:0}
         .attach-remove:hover{color:#ff8099}
 
+        /* Leads source tabs */
+        .leads-source-tabs{display:flex;gap:.5rem;margin-bottom:1.1rem;background:var(--surface2);border-radius:12px;padding:.35rem}
+        .leads-tab{flex:1;text-align:center;padding:.55rem .5rem;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s;border:none;background:none;font-family:'Instrument Sans',sans-serif}
+        .leads-tab.active{background:var(--surface);color:var(--accent);border:1px solid rgba(0,229,160,.25);box-shadow:0 1px 6px rgba(0,0,0,.3)}
+        .leads-panel{display:none}
+        .leads-panel.active{display:block}
+
+        /* Upload leads file zone */
+        .leads-file-zone{border:2px dashed var(--border);border-radius:12px;padding:1.3rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative}
+        .leads-file-zone:hover,.leads-file-zone.drag-over{border-color:rgba(0,229,160,.5);background:rgba(0,229,160,.04)}
+        .leads-file-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+        .leads-file-parsed{display:none;margin-top:.8rem;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:10px;padding:.75rem 1rem}
+        .leads-file-parsed.show{display:block}
+        .leads-file-parsed-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+        .leads-file-parsed-name{font-size:.83rem;color:var(--accent);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .leads-file-parsed-count{font-size:.78rem;color:var(--muted);white-space:nowrap;flex-shrink:0}
+        .leads-file-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.95rem;padding:0 .15rem;transition:color .15s;flex-shrink:0}
+        .leads-file-clear:hover{color:#ff8099}
+        .leads-file-sample{margin-top:.6rem;font-size:.73rem;color:#4a4a5a;line-height:1.7}
+
         /* Chunk selector */
         .chunk-section{background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.15);border-radius:12px;padding:1rem;margin-bottom:1.1rem}
         .chunk-label{font-size:.78rem;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between}
@@ -156,7 +176,7 @@
     <div class="toolbar">
         <div class="result-count">{% if data %}<strong>{{ data|length }}</strong> businesses found{% endif %}</div>
         <div class="toolbar-right">
-            <button class="btn btn-wa" id="wa-open-btn" onclick="openWaModal()" {% if not data %}disabled title="Scrape some leads first"{% endif %}>
+            <button class="btn btn-wa" id="wa-open-btn" onclick="openWaModal()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
                 WhatsApp
             </button>
@@ -199,6 +219,37 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="footer-brand">
+            Developed with <span class="footer-heart">♥</span> by
+            <span class="footer-name">Planet Accounting Solutions</span>
+        </div>
+        <div class="footer-tagline">
+            Empowering businesses with smarter tools, better leads &amp; more growth every single day.
+        </div>
+        <div class="footer-copy">© 2026 Planet Accounting Solutions · All rights reserved</div>
+    </div>
+</footer>
+
+<style>
+.site-footer{margin-top:4rem;padding:2.5rem 1rem 3rem;position:relative;z-index:1}
+.footer-inner{max-width:860px;margin:0 auto;text-align:center}
+.footer-dots{display:flex;justify-content:center;gap:.45rem;margin-bottom:1.4rem}
+.footer-dots span{width:6px;height:6px;border-radius:50%;background:var(--border);display:inline-block}
+.footer-dots span:nth-child(2){background:rgba(0,229,160,.35)}
+.footer-brand{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--muted);letter-spacing:.01em;margin-bottom:.5rem}
+.footer-heart{color:#ff6b8a;font-size:1.05rem;animation:heartbeat 1.4s ease-in-out infinite;display:inline-block;margin:0 .15rem}
+.footer-name{color:var(--accent);font-weight:800}
+.footer-tagline{font-size:.82rem;color:#3d3d4d;max-width:420px;margin:.3rem auto .9rem;line-height:1.65}
+.footer-copy{font-size:.72rem;color:#2e2e3a;letter-spacing:.04em}
+@keyframes heartbeat{0%,100%{transform:scale(1)}14%{transform:scale(1.25)}28%{transform:scale(1)}42%{transform:scale(1.15)}70%{transform:scale(1)}}
+</style>
 
 <!-- WhatsApp Modal -->
 <div class="modal-overlay" id="wa-overlay" onclick="overlayClick(event)">
@@ -247,26 +298,83 @@
       <div class="modal-hint">Minimum 3s recommended</div>
     </div>
 
-    <!-- Lead count -->
-    <div class="modal-field">
-      <label class="modal-label">Leads ready to message</label>
-      <input class="modal-input" type="text" id="wa-lead-count" readonly style="opacity:.65;cursor:default;"/>
-    </div>
+    <div class="modal-divider"></div>
 
-    <!-- Chunk selector -->
-    <div class="chunk-section">
-      <div class="chunk-label">
-        📦 Send in chunks <span id="chunk-hint">Select a range below</span>
+    <!-- ── LEADS SOURCE TABS ──────────────────────────────────────────── -->
+    <div class="modal-field">
+      <label class="modal-label">📋 Leads Source</label>
+      <div class="leads-source-tabs">
+        <button class="leads-tab active" id="tab-scraped" onclick="switchLeadsTab('scraped')">
+          🗺️ Scraped Leads
+        </button>
+        <button class="leads-tab" id="tab-file" onclick="switchLeadsTab('file')">
+          📂 Upload Excel / CSV
+        </button>
       </div>
-      <div class="chunk-pills" id="chunk-pills">
-        <div class="chunk-pill all active" data-start="all" onclick="selectChunk(this)">All leads</div>
+
+      <!-- Panel: scraped leads -->
+      <div class="leads-panel active" id="panel-scraped">
+        <input class="modal-input" type="text" id="wa-lead-count" readonly style="opacity:.65;cursor:default;"/>
+        <div class="modal-hint" style="margin-top:.4rem">These are the leads currently scraped from Google Maps.</div>
+
+        <!-- Chunk selector (scraped) -->
+        <div class="chunk-section" style="margin-top:.85rem;margin-bottom:0">
+          <div class="chunk-label">
+            📦 Send in chunks <span id="chunk-hint">Select a range below</span>
+          </div>
+          <div class="chunk-pills" id="chunk-pills">
+            <div class="chunk-pill all active" data-val="all" onclick="selectChunk(this)">All leads</div>
+          </div>
+          <div class="chunk-custom">
+            <span style="color:var(--muted);font-size:.8rem">Custom:</span>
+            <input type="number" id="chunk-from" placeholder="From" min="1" oninput="customChunk()"/>
+            <span>–</span>
+            <input type="number" id="chunk-to"   placeholder="To"   min="1" oninput="customChunk()"/>
+            <span style="color:var(--muted);font-size:.78rem" id="chunk-custom-hint"></span>
+          </div>
+        </div>
       </div>
-      <div class="chunk-custom">
-        <span style="color:var(--muted);font-size:.8rem">Custom:</span>
-        <input type="number" id="chunk-from" placeholder="From" min="1" oninput="customChunk()"/>
-        <span>–</span>
-        <input type="number" id="chunk-to"   placeholder="To"   min="1" oninput="customChunk()"/>
-        <span style="color:var(--muted);font-size:.78rem" id="chunk-custom-hint"></span>
+
+      <!-- Panel: file upload leads -->
+      <div class="leads-panel" id="panel-file">
+        <div class="leads-file-zone" id="leads-file-zone"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleLeadsFileDrop(event)">
+          <input type="file" id="leads-file-input" accept=".xlsx,.xls,.csv" onchange="handleLeadsFileSelect(event)"/>
+          <div class="attach-icon">📊</div>
+          <div class="attach-text"><strong>Click to upload</strong> or drag & drop</div>
+          <div class="attach-types">Excel (.xlsx / .xls) or CSV · Max 10MB</div>
+        </div>
+        <div class="leads-file-sample">
+          ℹ️ Your file needs a column named <strong style="color:var(--accent)">Phone</strong>, <strong style="color:var(--accent)">Mobile</strong>, or <strong style="color:var(--accent)">Contact</strong>.<br/>
+          Optionally include a <strong style="color:var(--accent)">Name</strong> column too.
+        </div>
+        <div class="leads-file-parsed" id="leads-file-parsed">
+          <div class="leads-file-parsed-row">
+            <span class="attach-preview-icon">📊</span>
+            <span class="leads-file-parsed-name" id="leads-file-parsed-name"></span>
+            <span class="leads-file-parsed-count" id="leads-file-parsed-count"></span>
+            <button class="leads-file-clear" onclick="clearLeadsFile()" title="Remove">✕</button>
+          </div>
+
+          <!-- Chunk selector (file leads) -->
+          <div class="chunk-section" style="margin-top:.85rem;margin-bottom:0">
+            <div class="chunk-label">
+              📦 Send in chunks <span id="file-chunk-hint">Select a range below</span>
+            </div>
+            <div class="chunk-pills" id="file-chunk-pills">
+              <div class="chunk-pill all active" data-val="all" onclick="selectFileChunk(this)">All leads</div>
+            </div>
+            <div class="chunk-custom">
+              <span style="color:var(--muted);font-size:.8rem">Custom:</span>
+              <input type="number" id="file-chunk-from" placeholder="From" min="1" oninput="customFileChunk()"/>
+              <span>–</span>
+              <input type="number" id="file-chunk-to"   placeholder="To"   min="1" oninput="customFileChunk()"/>
+              <span style="color:var(--muted);font-size:.78rem" id="file-chunk-custom-hint"></span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -285,7 +393,7 @@
     <!-- Actions -->
     <div class="modal-actions">
       <button class="modal-btn modal-btn-save" onclick="saveWaTemplate()">💾 Save</button>
-      <button class="modal-btn modal-btn-send" id="wa-send-btn" onclick="sendAll()">📤 Send to Selected</button>
+      <button class="modal-btn modal-btn-send" id="wa-send-btn" onclick="sendAll()">📤 Send to All</button>
     </div>
 
     <div class="progress-wrap" id="wa-progress-wrap"><div class="progress-bar" id="wa-progress-bar"></div></div>
@@ -295,77 +403,95 @@
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────
-let totalLeads = 0;
-let validLeads = 0;
-let selectedChunkStart = null;  // null = all
+let totalLeads        = 0;
+let validLeads        = 0;
+let selectedChunkStart = null;
 let selectedChunkEnd   = null;
 
+// File-leads state
+let fileLeads          = [];
+let fileValidLeads     = 0;
+let fileChunkStart     = null;
+let fileChunkEnd       = null;
+let activeLeadsTab     = 'scraped';  // 'scraped' | 'file'
+
 function showLoading(){ document.getElementById('loading').classList.add('active'); }
-function openWaModal() { document.getElementById('wa-overlay').classList.add('open'); loadTemplate(); updateLeadCount(); loadAttachmentInfo(); }
+
+function openWaModal(){
+    document.getElementById('wa-overlay').classList.add('open');
+    loadTemplate();
+    updateLeadCount();
+    loadAttachmentInfo();
+}
 function closeWaModal(){ document.getElementById('wa-overlay').classList.remove('open'); resetStatus(); }
 function overlayClick(e){ if(e.target===document.getElementById('wa-overlay')) closeWaModal(); }
 
 function loadTemplate(){
-    fetch('/whatsapp-template').then(r=>r.json()).then(d=>{ document.getElementById('wa-template').value=d.template||''; }).catch(()=>{});
+    fetch('/whatsapp-template').then(r=>r.json()).then(d=>{
+        document.getElementById('wa-template').value = d.template || '';
+    }).catch(()=>{});
 }
 
 function updateLeadCount(){
     fetch('/whatsapp-lead-count').then(r=>r.json()).then(d=>{
         totalLeads = d.total;
         validLeads = d.with_phone;
-        document.getElementById('wa-lead-count').value = `${d.with_phone} of ${d.total} leads have a valid phone number`;
+        document.getElementById('wa-lead-count').value =
+            `${d.with_phone} of ${d.total} leads have a valid phone number`;
         buildChunkPills(d.with_phone);
+        updateSendBtn();
     }).catch(()=>{});
 }
 
-// ── Chunk pills ────────────────────────────────────────────────────────
-function buildChunkPills(count){
-    const wrap = document.getElementById('chunk-pills');
-    wrap.innerHTML = '';
-
-    // All
-    const allPill = mkPill('All leads', 'all', true);
-    wrap.appendChild(allPill);
-
-    if (count <= 10) return; // no chunks needed
-
-    // Auto chunks of 10
-    for (let s = 1; s <= count; s += 10){
-        const e   = Math.min(s + 9, count);
-        const txt = `${s}–${e}`;
-        wrap.appendChild(mkPill(txt, `${s}:${e}`, false));
-    }
-
+// ── Leads source tabs ──────────────────────────────────────────────────
+function switchLeadsTab(tab){
+    activeLeadsTab = tab;
+    document.querySelectorAll('.leads-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.leads-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-'   + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
     updateSendBtn();
 }
 
-function mkPill(label, value, active){
+// ── Scraped chunk pills ────────────────────────────────────────────────
+function buildChunkPills(count){
+    const wrap = document.getElementById('chunk-pills');
+    wrap.innerHTML = '';
+    const allPill = mkPill('All leads', 'all', true, selectChunk);
+    wrap.appendChild(allPill);
+    if (count > 10){
+        for (let s = 1; s <= count; s += 10){
+            const e = Math.min(s + 9, count);
+            wrap.appendChild(mkPill(`${s}–${e}`, `${s}:${e}`, false, selectChunk));
+        }
+    }
+    selectedChunkStart = null;
+    selectedChunkEnd   = null;
+    updateSendBtn();
+}
+
+function mkPill(label, value, active, handler){
     const d = document.createElement('div');
     d.className = 'chunk-pill' + (value==='all'?' all':'') + (active?' active':'');
     d.dataset.val = value;
     d.textContent = label;
-    d.onclick = () => selectChunk(d);
+    d.onclick = () => handler(d);
     return d;
 }
 
 function selectChunk(el){
-    document.querySelectorAll('.chunk-pill').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('#chunk-pills .chunk-pill').forEach(p=>p.classList.remove('active'));
     el.classList.add('active');
-
-    // Clear custom inputs
     document.getElementById('chunk-from').value = '';
     document.getElementById('chunk-to').value   = '';
     document.getElementById('chunk-custom-hint').textContent = '';
-
     const v = el.dataset.val;
     if (v === 'all'){
-        selectedChunkStart = null;
-        selectedChunkEnd   = null;
+        selectedChunkStart = null; selectedChunkEnd = null;
         document.getElementById('chunk-hint').textContent = 'Sending all valid leads';
     } else {
-        const [s, e] = v.split(':').map(Number);
-        selectedChunkStart = s;
-        selectedChunkEnd   = e;
+        const [s,e] = v.split(':').map(Number);
+        selectedChunkStart = s; selectedChunkEnd = e;
         document.getElementById('chunk-hint').textContent = `Leads ${s}–${e} selected`;
     }
     updateSendBtn();
@@ -374,30 +500,122 @@ function selectChunk(el){
 function customChunk(){
     const from = parseInt(document.getElementById('chunk-from').value);
     const to   = parseInt(document.getElementById('chunk-to').value);
-
-    document.querySelectorAll('.chunk-pill').forEach(p=>p.classList.remove('active'));
-
+    document.querySelectorAll('#chunk-pills .chunk-pill').forEach(p=>p.classList.remove('active'));
     if (!isNaN(from) && !isNaN(to) && from >= 1 && to >= from){
         selectedChunkStart = from;
         selectedChunkEnd   = Math.min(to, validLeads);
-        const count = selectedChunkEnd - selectedChunkStart + 1;
+        const count = selectedChunkEnd - from + 1;
         document.getElementById('chunk-hint').textContent = `Leads ${from}–${selectedChunkEnd} (${count})`;
         document.getElementById('chunk-custom-hint').textContent = `${count} lead${count!==1?'s':''}`;
     } else {
-        selectedChunkStart = null;
-        selectedChunkEnd   = null;
+        selectedChunkStart = null; selectedChunkEnd = null;
         document.getElementById('chunk-hint').textContent = 'Select a range below';
         document.getElementById('chunk-custom-hint').textContent = '';
     }
     updateSendBtn();
 }
 
+// ── File leads chunk pills ─────────────────────────────────────────────
+function buildFileChunkPills(count){
+    const wrap = document.getElementById('file-chunk-pills');
+    wrap.innerHTML = '';
+    const allPill = mkPill('All leads', 'all', true, selectFileChunk);
+    wrap.appendChild(allPill);
+    if (count > 10){
+        for (let s = 1; s <= count; s += 10){
+            const e = Math.min(s + 9, count);
+            wrap.appendChild(mkPill(`${s}–${e}`, `${s}:${e}`, false, selectFileChunk));
+        }
+    }
+    fileChunkStart = null; fileChunkEnd = null;
+    updateSendBtn();
+}
+
+function selectFileChunk(el){
+    document.querySelectorAll('#file-chunk-pills .chunk-pill').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('file-chunk-from').value = '';
+    document.getElementById('file-chunk-to').value   = '';
+    document.getElementById('file-chunk-custom-hint').textContent = '';
+    const v = el.dataset.val;
+    if (v === 'all'){
+        fileChunkStart = null; fileChunkEnd = null;
+        document.getElementById('file-chunk-hint').textContent = 'Sending all valid leads';
+    } else {
+        const [s,e] = v.split(':').map(Number);
+        fileChunkStart = s; fileChunkEnd = e;
+        document.getElementById('file-chunk-hint').textContent = `Leads ${s}–${e} selected`;
+    }
+    updateSendBtn();
+}
+
+function customFileChunk(){
+    const from = parseInt(document.getElementById('file-chunk-from').value);
+    const to   = parseInt(document.getElementById('file-chunk-to').value);
+    document.querySelectorAll('#file-chunk-pills .chunk-pill').forEach(p=>p.classList.remove('active'));
+    if (!isNaN(from) && !isNaN(to) && from >= 1 && to >= from){
+        fileChunkStart = from;
+        fileChunkEnd   = Math.min(to, fileValidLeads);
+        const count = fileChunkEnd - from + 1;
+        document.getElementById('file-chunk-hint').textContent = `Leads ${from}–${fileChunkEnd} (${count})`;
+        document.getElementById('file-chunk-custom-hint').textContent = `${count} lead${count!==1?'s':''}`;
+    } else {
+        fileChunkStart = null; fileChunkEnd = null;
+        document.getElementById('file-chunk-hint').textContent = 'Select a range below';
+        document.getElementById('file-chunk-custom-hint').textContent = '';
+    }
+    updateSendBtn();
+}
+
 function updateSendBtn(){
-    const btn  = document.getElementById('wa-send-btn');
-    const count = selectedChunkStart
-        ? (selectedChunkEnd - selectedChunkStart + 1)
-        : validLeads;
-    btn.textContent = `📤 Send to ${count > 0 ? count : 'All'} Leads`;
+    const btn = document.getElementById('wa-send-btn');
+    if (activeLeadsTab === 'file'){
+        if (!fileLeads.length){ btn.textContent = '📤 Send (upload file first)'; return; }
+        const count = fileChunkStart ? (fileChunkEnd - fileChunkStart + 1) : fileValidLeads;
+        btn.textContent = `📤 Send to ${count} File Leads`;
+    } else {
+        const count = selectedChunkStart ? (selectedChunkEnd - selectedChunkStart + 1) : validLeads;
+        btn.textContent = `📤 Send to ${count > 0 ? count : 'All'} Leads`;
+    }
+}
+
+// ── Upload leads file ──────────────────────────────────────────────────
+function handleLeadsFileSelect(e){ if(e.target.files[0]) parseLeadsFile(e.target.files[0]); }
+function handleLeadsFileDrop(e){
+    e.preventDefault();
+    document.getElementById('leads-file-zone').classList.remove('drag-over');
+    if(e.dataTransfer.files[0]) parseLeadsFile(e.dataTransfer.files[0]);
+}
+
+function parseLeadsFile(file){
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx','xls','csv'].includes(ext)){
+        showStatus('Only .xlsx, .xls, or .csv files are supported', 'error'); return;
+    }
+    showStatus(`Parsing ${file.name}…`, 'info');
+    const fd = new FormData(); fd.append('file', file);
+    fetch('/parse-leads-file', {method:'POST', body:fd})
+        .then(r=>r.json())
+        .then(d=>{
+            if(d.error){ showStatus('✗ ' + d.error, 'error'); return; }
+            fileLeads      = d.leads;
+            fileValidLeads = d.valid;
+            document.getElementById('leads-file-parsed-name').textContent  = file.name;
+            document.getElementById('leads-file-parsed-count').textContent =
+                `${d.valid} valid / ${d.total} total`;
+            document.getElementById('leads-file-parsed').classList.add('show');
+            buildFileChunkPills(d.valid);
+            showStatus(`✓ ${file.name} parsed — ${d.valid} leads with valid phone numbers`, 'success');
+        })
+        .catch(e => showStatus('✗ ' + e.message, 'error'));
+}
+
+function clearLeadsFile(){
+    fileLeads = []; fileValidLeads = 0; fileChunkStart = null; fileChunkEnd = null;
+    document.getElementById('leads-file-parsed').classList.remove('show');
+    document.getElementById('leads-file-input').value = '';
+    resetStatus();
+    updateSendBtn();
 }
 
 // ── Attachment ─────────────────────────────────────────────────────────
@@ -435,28 +653,37 @@ function sendTest(){
     const num=document.getElementById('wa-test-number').value.trim();
     if(!num){showStatus('Enter a test number first','error');return;}
     showStatus(`Sending test to ${num}... (WhatsApp Web will open)`,'info');
-    _doSend(num,null,null,null);
+    _doSendScraped(num, null, null, null);
 }
 
 function sendAll(){
-    const btn=document.getElementById('wa-send-btn');
-    btn.disabled=true; btn.textContent='⏳ Sending…';
-    const label = selectedChunkStart
-        ? `leads ${selectedChunkStart}–${selectedChunkEnd}`
-        : 'all leads';
-    showStatus(`Starting campaign for ${label} — keep WhatsApp browser open!`,'info');
-    showProgress(10);
-    _doSend(null, selectedChunkStart, selectedChunkEnd, ()=>{ btn.disabled=false; updateSendBtn(); });
+    const btn = document.getElementById('wa-send-btn');
+    btn.disabled = true;
+
+    if (activeLeadsTab === 'file'){
+        if (!fileLeads.length){ showStatus('Upload an Excel/CSV file first', 'error'); btn.disabled=false; return; }
+        btn.textContent = '⏳ Sending…';
+        const label = fileChunkStart ? `leads ${fileChunkStart}–${fileChunkEnd}` : 'all file leads';
+        showStatus(`Starting campaign for ${label} — keep WhatsApp browser open!`, 'info');
+        showProgress(10);
+        _doSendFile(fileChunkStart, fileChunkEnd, ()=>{ btn.disabled=false; updateSendBtn(); });
+    } else {
+        btn.textContent = '⏳ Sending…';
+        const label = selectedChunkStart ? `leads ${selectedChunkStart}–${selectedChunkEnd}` : 'all leads';
+        showStatus(`Starting campaign for ${label} — keep WhatsApp browser open!`, 'info');
+        showProgress(10);
+        _doSendScraped(null, selectedChunkStart, selectedChunkEnd, ()=>{ btn.disabled=false; updateSendBtn(); });
+    }
 }
 
-function _doSend(testNumber, chunkStart, chunkEnd, onDone){
-    const delay=parseInt(document.getElementById('wa-delay').value)||5;
-    const body={delay};
-    if(testNumber)  body.test_number=testNumber;
-    if(chunkStart)  body.chunk_start=chunkStart;
-    if(chunkEnd)    body.chunk_end=chunkEnd;
+function _doSendScraped(testNumber, chunkStart, chunkEnd, onDone){
+    const delay = parseInt(document.getElementById('wa-delay').value) || 5;
+    const body  = {delay};
+    if(testNumber) body.test_number = testNumber;
+    if(chunkStart) body.chunk_start = chunkStart;
+    if(chunkEnd)   body.chunk_end   = chunkEnd;
 
-    fetch('/send-whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    fetch('/send-whatsapp', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
         .then(r=>r.json())
         .then(d=>{
             hideProgress(); if(onDone) onDone();
@@ -464,9 +691,26 @@ function _doSend(testNumber, chunkStart, chunkEnd, onDone){
             if(testNumber){
                 showStatus(d.sent>0?`✓ Test sent to ${testNumber}!`:`✗ Failed: ${d.details?.[0]?.error||'unknown'}`,d.sent>0?'success':'error');
             } else {
-                const pct=d.total?Math.round(d.sent/d.total*100):0;
+                const pct = d.total ? Math.round(d.sent/d.total*100) : 0;
                 showStatus(`✓ Done!\n📤 Sent: ${d.sent}   ✗ Failed: ${d.failed}   📋 Total: ${d.total}   (${pct}%)`, 'success');
             }
+        })
+        .catch(e=>{hideProgress();if(onDone)onDone();showStatus('✗ '+e.message,'error');});
+}
+
+function _doSendFile(chunkStart, chunkEnd, onDone){
+    const delay = parseInt(document.getElementById('wa-delay').value) || 5;
+    const body  = {delay, leads: fileLeads};
+    if(chunkStart) body.chunk_start = chunkStart;
+    if(chunkEnd)   body.chunk_end   = chunkEnd;
+
+    fetch('/send-whatsapp-custom', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+        .then(r=>r.json())
+        .then(d=>{
+            hideProgress(); if(onDone) onDone();
+            if(d.error){showStatus('✗ '+d.error,'error');return;}
+            const pct = d.total ? Math.round(d.sent/d.total*100) : 0;
+            showStatus(`✓ Done!\n📤 Sent: ${d.sent}   ✗ Failed: ${d.failed}   📋 Total: ${d.total}   (${pct}%)`, 'success');
         })
         .catch(e=>{hideProgress();if(onDone)onDone();showStatus('✗ '+e.message,'error');});
 }

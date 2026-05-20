@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, send_file, jsonify
 from scraper import scrape_google_maps
 from whatsapp_service import (load_template, save_template, send_bulk_whatsapp,
-                               sanitize_phone, save_attachment, clear_attachment, get_attachment_path)
+                               sanitize_phone, save_attachment, clear_attachment,
+                               get_attachment_path, extract_leads_from_file)
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -127,13 +128,12 @@ def send_whatsapp():
     body        = request.json or {}
     delay       = int(body.get("delay", 5))
     test_number = body.get("test_number","").strip() or None
-    chunk_start = body.get("chunk_start")   # 1-based, inclusive
-    chunk_end   = body.get("chunk_end")     # 1-based, inclusive
+    chunk_start = body.get("chunk_start")
+    chunk_end   = body.get("chunk_end")
 
     if not test_number and not scraped_data:
         return jsonify({"error":"No leads. Scrape first."}), 400
 
-    # Convert to int if present
     if chunk_start: chunk_start = int(chunk_start)
     if chunk_end:   chunk_end   = int(chunk_end)
 
@@ -151,6 +151,61 @@ def send_whatsapp():
         return jsonify({"error": str(e)}), 500
 
 
+# ── NEW: Parse leads from uploaded Excel / CSV ────────────────────────────────
+
+@app.route("/parse-leads-file", methods=["POST"])
+def parse_leads_file():
+    try:
+        if "file" not in request.files:
+            return jsonify({"error": "No file uploaded"}), 400
+        file = request.files["file"]
+        if not file.filename:
+            return jsonify({"error": "Empty filename"}), 400
+        file.seek(0, 2); size = file.tell(); file.seek(0)
+        if size > 10 * 1024 * 1024:
+            return jsonify({"error": "File too large (max 10MB)"}), 400
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in ('.xlsx', '.xls', '.csv'):
+            return jsonify({"error": f"Unsupported format '{ext}'. Use .xlsx, .xls, or .csv"}), 400
+        data = file.read()
+        print(f"[parse-leads-file] {file.filename} | {size} bytes | ext={ext}")
+        leads = extract_leads_from_file(data, file.filename)
+        print(f"[parse-leads-file] extracted {len(leads)} leads")
+        if not leads:
+            return jsonify({"error": "No phone numbers found. Make sure there is a column named Phone, Mobile, or Contact."}), 400
+        valid = sum(1 for l in leads if sanitize_phone(l.get("Phone", "")))
+        return jsonify({"success": True, "leads": leads, "total": len(leads), "valid": valid})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+
+# ── NEW: Send WhatsApp to custom (file-uploaded) leads ────────────────────────
+
+@app.route("/send-whatsapp-custom", methods=["POST"])
+def send_whatsapp_custom():
+    body  = request.json or {}
+    leads = body.get("leads", [])
+    delay = int(body.get("delay", 5))
+    chunk_start = body.get("chunk_start")
+    chunk_end   = body.get("chunk_end")
+    if chunk_start: chunk_start = int(chunk_start)
+    if chunk_end:   chunk_end   = int(chunk_end)
+    if not leads:
+        return jsonify({"error": "No leads provided"}), 400
+    try:
+        results = send_bulk_whatsapp(
+            leads, load_template(),
+            delay_between=delay,
+            attachment_path=get_attachment_path(),
+            chunk_start=chunk_start,
+            chunk_end=chunk_end,
+        )
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)
-        
